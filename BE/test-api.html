@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API - Kính Mắt Backend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .api-section {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .api-section h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        .post-btn {
+            background-color: #28a745;
+        }
+        .post-btn:hover {
+            background-color: #218838;
+        }
+        .put-btn {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .put-btn:hover {
+            background-color: #e0a800;
+        }
+        #result {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+        .form-row input {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test API - Kính Mắt Backend</h1>
+        <p>Server URL: <strong>http://localhost:8080</strong></p>
+        <div id="result">Kết quả API sẽ hiển thị ở đây...</div>
+    </div>
+
+    <!-- Health Check -->
+    <div class="container">
+        <div class="api-section">
+            <h3>🏥 Health Check</h3>
+            <button onclick="testHealth()">Test Health Check</button>
+        </div>
+    </div>
+
+    <!-- Sản phẩm -->
+    <div class="container">
+        <div class="api-section">
+            <h3>📦 Sản phẩm (Products)</h3>
+            <button onclick="getAllProducts()">GET - Lấy tất cả sản phẩm</button>
+            <button onclick="getProductById()">GET - Lấy sản phẩm theo ID</button>
+            <button onclick="showAddProductForm()">POST - Thêm sản phẩm mới</button>
+            <button onclick="showUpdateProductForm()">PUT - Cập nhật sản phẩm</button>
+            <button class="delete-btn" onclick="deleteProduct()">DELETE - Xóa sản phẩm</button>
+            
+            <div id="addProductForm" style="display: none; margin-top: 15px;">
+                <h4>Thêm sản phẩm mới:</h4>
+                <div class="form-group">
+                    <label>Tên sản phẩm:</label>
+                    <input type="text" id="productName" placeholder="Nhập tên sản phẩm">
+                </div>
+                <div class="form-group">
+                    <label>Giá:</label>
+                    <input type="number" id="productPrice" placeholder="Nhập giá">
+                </div>
+                <div class="form-group">
+                    <label>Mô tả:</label>
+                    <textarea id="productDescription" placeholder="Nhập mô tả"></textarea>
+                </div>
+                <button class="post-btn" onclick="addProduct()">Thêm sản phẩm</button>
+            </div>
+
+            <div id="updateProductForm" style="display: none; margin-top: 15px;">
+                <h4>Cập nhật sản phẩm:</h4>
+                <div class="form-group">
+                    <label>ID sản phẩm:</label>
+                    <input type="number" id="updateProductId" placeholder="Nhập ID sản phẩm">
+                </div>
+                <div class="form-group">
+                    <label>Tên sản phẩm:</label>
+                    <input type="text" id="updateProductName" placeholder="Nhập tên sản phẩm">
+                </div>
+                <div class="form-group">
+                    <label>Giá:</label>
+                    <input type="number" id="updateProductPrice" placeholder="Nhập giá">
+                </div>
+                <button class="put-btn" onclick="updateProduct()">Cập nhật sản phẩm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh mục -->
+    <div class="container">
+        <div class="api-section">
+            <h3>📂 Danh mục (Categories)</h3>
+            <button onclick="getAllCategories()">GET - Lấy tất cả danh mục</button>
+            <button onclick="getCategoryById()">GET - Lấy danh mục theo ID</button>
+        </div>
+    </div>
+
+    <!-- Khách hàng -->
+    <div class="container">
+        <div class="api-section">
+            <h3>👥 Khách hàng (Customers)</h3>
+            <button onclick="getAllCustomers()">GET - Lấy tất cả khách hàng</button>
+            <button onclick="getCustomerById()">GET - Lấy khách hàng theo ID</button>
+        </div>
+    </div>
+
+    <!-- Hóa đơn -->
+    <div class="container">
+        <div class="api-section">
+            <h3>🧾 Hóa đơn (Orders)</h3>
+            <button onclick="getAllOrders()">GET - Lấy tất cả hóa đơn</button>
+            <button onclick="getOrderById()">GET - Lấy hóa đơn theo ID</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api';
+
+        function displayResult(data) {
+            document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                displayResult({
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: data
+                });
+                return data;
+            } catch (error) {
+                displayResult({
+                    error: error.message,
+                    message: 'Không thể kết nối đến server. Hãy đảm bảo server đang chạy.'
+                });
+            }
+        }
+
+        // Health Check
+        async function testHealth() {
+            await makeRequest(`${API_BASE_URL}/health`);
+        }
+
+        // Sản phẩm
+        async function getAllProducts() {
+            await makeRequest(`${API_BASE_URL}/sanpham`);
+        }
+
+        async function getProductById() {
+            const id = prompt('Nhập ID sản phẩm:');
+            if (id) {
+                await makeRequest(`${API_BASE_URL}/sanpham/${id}`);
+            }
+        }
+
+        function showAddProductForm() {
+            document.getElementById('addProductForm').style.display = 'block';
+            document.getElementById('updateProductForm').style.display = 'none';
+        }
+
+        function showUpdateProductForm() {
+            document.getElementById('updateProductForm').style.display = 'block';
+            document.getElementById('addProductForm').style.display = 'none';
+        }
+
+        async function addProduct() {
+            const productData = {
+                ten_sanpham: document.getElementById('productName').value,
+                gia: parseFloat(document.getElementById('productPrice').value),
+                mo_ta: document.getElementById('productDescription').value
+            };
+
+            await makeRequest(`${API_BASE_URL}/sanpham`, {
+                method: 'POST',
+                body: JSON.stringify(productData)
+            });
+        }
+
+        async function updateProduct() {
+            const id = document.getElementById('updateProductId').value;
+            const productData = {
+                ten_sanpham: document.getElementById('updateProductName').value,
+                gia: parseFloat(document.getElementById('updateProductPrice').value)
+            };
+
+            await makeRequest(`${API_BASE_URL}/sanpham/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(productData)
+            });
+        }
+
+        async function deleteProduct() {
+            const id = prompt('Nhập ID sản phẩm cần xóa:');
+            if (id) {
+                await makeRequest(`${API_BASE_URL}/sanpham/${id}`, {
+                    method: 'DELETE'
+                });
+            }
+        }
+
+        // Danh mục
+        async function getAllCategories() {
+            await makeRequest(`${API_BASE_URL}/danhmuc`);
+        }
+
+        async function getCategoryById() {
+            const id = prompt('Nhập ID danh mục:');
+            if (id) {
+                await makeRequest(`${API_BASE_URL}/danhmuc/${id}`);
+            }
+        }
+
+        // Khách hàng
+        async function getAllCustomers() {
+            await makeRequest(`${API_BASE_URL}/khachhang`);
+        }
+
+        async function getCustomerById() {
+            const id = prompt('Nhập ID khách hàng:');
+            if (id) {
+                await makeRequest(`${API_BASE_URL}/khachhang/${id}`);
+            }
+        }
+
+        // Hóa đơn
+        async function getAllOrders() {
+            await makeRequest(`${API_BASE_URL}/hoadon`);
+        }
+
+        async function getOrderById() {
+            const id = prompt('Nhập ID hóa đơn:');
+            if (id) {
+                await makeRequest(`${API_BASE_URL}/hoadon/${id}`);
+            }
+        }
+
+        // Test health check khi load trang
+        window.onload = function() {
+            testHealth();
+        };
+    </script>
+</body>
+</html>
