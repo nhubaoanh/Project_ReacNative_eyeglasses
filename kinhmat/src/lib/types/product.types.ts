@@ -1,27 +1,34 @@
 export interface Product {
-  id: string;
-  name: string; // Tên sản phẩm: "Kính cận gọng tròn Titan"
-  brand: string; // Thương hiệu: Ray-Ban, Gentle Monster, Essilor...
-  model: string; // Mã/Model sản phẩm
-  price: number;
-  originalPrice?: number;
-  discount?: number;
-  images: string[];
-  thumbnail: string;
-  description: string;
-  specifications: ProductSpecifications; // Đặc tính của kính
-  colors: ProductColor[];
-  storage: ProductStorage[]; // Quy cách: 1 cặp, Combo, Size...
-  rating: number;
-  reviewCount: number;
-  inStock: boolean;
-  isNew?: boolean;
-  isFeatured?: boolean;
-  category: string; // glasses, sunglasses, lenses, contact-lenses...
-  tags: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  masp?: number;
+  tensp: string;
+  maloai: number;
+  thuonghieu: string;
+  hinhanh: string;
+  gia : number;
+  mausac: string;
+  kieudang: string;
+  kichthuoc: string;
+  chatlieu: string;
 }
+
+// Kiểu dữ liệu từ API
+// export interface ProductFromAPI {
+//   masp: number;
+//   tensp: string;
+//   model: string;
+//   id_danhmuc?: number;
+//   id_thuonghieu?: number;
+//   id_xuatxu?: number;
+//   id_chatlieu?: number;
+//   id_kieudang?: number;
+//   mo_ta: string;
+//   hinh_anh: string[];
+//   san_pham_moi?: number;      // 0 hoặc 1
+//   san_pham_noi_bat?: number;  // 0 hoặc 1
+//   ngay_tao: string;           // ISO string
+//   ngay_cap_nhat: string;      // ISO string
+//   gia?: number;
+// }
 
 // 🔹 Sửa cấu trúc specifications để hợp lý với kính mắt
 export interface ProductSpecifications {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import apiService, { Product } from '../service/apiService';
 
 const HomeScreen: React.FC = () => {
@@ -38,20 +38,53 @@ const HomeScreen: React.FC = () => {
     setRefreshing(false);
   };
 
-  const renderProduct = ({ item }: { item: Product }) => (
-    <View style={styles.productCard}>
-      <Text style={styles.productName}>{item.ten_sanpham}</Text>
-      <Text style={styles.productName}>{item.mo_ta}</Text>
-      <Text style={styles.productName}>{item.model}</Text>
-      <Text style={styles.productName}>{item.gia}</Text>
-      <Text style={styles.productPrice}>
-        {item.gia?.toLocaleString()} VNĐ
-      </Text>
-      {item.mo_ta && (
-        <Text style={styles.productDescription}>{item.mo_ta}</Text>
-      )}
-    </View>
-  );
+  const renderProduct = ({ item }: { item: Product }) => {
+    // Debug logging for image paths
+    console.log('Product:', item.tensp, 'hinhanh:', item.hinhanh);
+    if (item.hinhanh) {
+      const imageUrl = apiService.getImageUrl(item.hinhanh);
+      console.log('Generated image URL:', imageUrl);
+    }
+    
+    return (
+      <View style={styles.productCard}>
+        <View style={styles.imageContainer}>
+          {item.hinhanh ? (
+            <Image 
+              source={{ uri: apiService.getImageUrl(item.hinhanh) }} 
+              style={styles.productImage}
+              resizeMode="cover"
+              onError={(error) => {
+                console.log('Image load error for', item.tensp, ':', error.nativeEvent.error);
+              }}
+              onLoad={() => {
+                console.log('Image loaded successfully for', item.tensp);
+              }}
+            />
+          ) : (
+            <View style={styles.noImageContainer}>
+              <Text style={styles.noImageText}>📷</Text>
+              <Text style={styles.noImageSubText}>Chưa có ảnh</Text>
+            </View>
+          )}
+        </View>
+        
+        <View style={styles.productInfo}>
+          <Text style={styles.productName}>{item.tensp}</Text>
+          <Text style={styles.productBrand}>Thương hiệu: {item.thuonghieu}</Text>
+          <Text style={styles.productPrice}>
+            {item.gia?.toLocaleString()} VNĐ
+          </Text>
+          <View style={styles.productDetails}>
+            <Text style={styles.productDetailText}>Màu: {item.mausac}</Text>
+            <Text style={styles.productDetailText}>Kiểu: {item.kieudang}</Text>
+          </View>
+          <Text style={styles.productMaterial}>Chất liệu: {item.chatlieu}</Text>
+          <Text style={styles.productSize}>Kích thước: {item.kichthuoc}</Text>
+        </View>
+      </View>
+    );
+  };
 
   if (loading) {
     return (
@@ -80,12 +113,14 @@ const HomeScreen: React.FC = () => {
       <FlatList
         data={products}
         renderItem={renderProduct}
-        keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+        keyExtractor={(item) => item.masp?.toString() || Math.random().toString()}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContainer}
+        numColumns={2}
+        columnWrapperStyle={styles.row}
       />
     </View>
   );
@@ -131,35 +166,85 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   listContainer: {
-    padding: 15,
+    padding: 10,
+  },
+  row: {
+    justifyContent: 'space-between',
   },
   productCard: {
     backgroundColor: 'white',
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 8,
+    flex: 1,
+    margin: 5,
+    borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    overflow: 'hidden',
+  },
+  imageContainer: {
+    height: 150,
+    width: '100%',
+  },
+  productImage: {
+    width: '100%',
+    height: '100%',
+  },
+  noImageContainer: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noImageText: {
+    fontSize: 32,
+    color: '#ccc',
+  },
+  noImageSubText: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 5,
+  },
+  productInfo: {
+    padding: 12,
   },
   productName: {
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 5,
+    fontWeight: 'bold',
+    marginBottom: 4,
     color: '#333',
   },
-  productPrice: {
-    fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '600',
-    marginBottom: 5,
-  },
-  productDescription: {
+  productBrand: {
     fontSize: 12,
     color: '#666',
-    fontStyle: 'italic',
+    marginBottom: 4,
+  },
+  productPrice: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: 'bold',
+    marginBottom: 6,
+  },
+  productDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  productDetailText: {
+    fontSize: 11,
+    color: '#888',
+    flex: 1,
+  },
+  productMaterial: {
+    fontSize: 11,
+    color: '#888',
+    marginBottom: 2,
+  },
+  productSize: {
+    fontSize: 11,
+    color: '#888',
   },
 });
 

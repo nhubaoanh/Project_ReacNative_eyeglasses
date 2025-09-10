@@ -1,35 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, SafeAreaView } from 'react-native';
 import { Colors } from '../../../constants/colors';
 import { Sizes } from '../../../constants/sizes';
 import { Button } from '../../components/ui/Button';
 import { Product, ProductColor, ProductStorage } from '../../lib/types/product.types';
-import { mockProducts } from '../../lib/utils/mockData';
+import apiService, { Product as ApiProduct } from '../../service/apiService';
 
 const { width } = Dimensions.get('window');
 
 interface ProductDetailScreenProps {
-  productId?: string;
+  productId?: number;
 }
 
 const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ productId }) => {
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [selectedStorage, setSelectedStorage] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState<ApiProduct | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Find product by ID or use first product as fallback
-  const product: Product = productId 
-    ? mockProducts.find(p => p.id === productId) || mockProducts[0]
-    : mockProducts[0];
+  // Fetch product data from API
+  useEffect(() => {
+    if (productId) {
+      fetchProduct();
+    }
+  }, [productId]);
+
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await apiService.getProductById(productId || 0);
+      
+      if (response.success && response.data) {
+        setProduct(response.data);
+        console.log('Product data:', response.data);
+      } else {
+        setError('Không thể tải thông tin sản phẩm');
+      }
+    } catch (err) {
+      console.error('Error fetching product:', err);
+      setError('Không thể kết nối đến server');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddToCart = () => {
     // TODO: Implement add to cart functionality
-    console.log('Add to cart:', product.id, quantity);
+    console.log('Add to cart:', product?.masp, quantity);
   };
 
   const handleBuyNow = () => {
     // TODO: Implement buy now functionality
-    console.log('Buy now:', product.id, quantity);
+    console.log('Buy now:', product?.masp, quantity);
   };
 
   const formatPrice = (price: number) => {
@@ -39,42 +65,49 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ productId }) 
     }).format(price);
   };
 
-  const renderImageGallery = () => (
-    <View style={styles.imageGallery}>
-      <Image source={{ uri: product.images[0] }} style={styles.mainImage} />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbnailContainer}>
-        {product.images.map((image, index) => (
-          <TouchableOpacity key={index} style={styles.thumbnailWrapper}>
-            <Image source={{ uri: image }} style={styles.thumbnail} />
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
-  );
+  const renderImageGallery = () => {
+    const getImageSource = () => {
+      if (!product?.hinhanh) {
+        return { uri: 'https://via.placeholder.com/300x400?text=No+Image' };
+      }
+      
+      const imageUrl = apiService.getImageUrl(product.hinhanh);
+      return { uri: imageUrl };
+    };
+
+    return (
+      <View style={styles.imageGallery}>
+        <Image 
+          source={getImageSource()} 
+          style={styles.mainImage}
+          resizeMode="contain"
+        />
+        {/* Thumbnail images - có thể thêm sau khi có multiple images */}
+      </View>
+    );
+  };
 
   const renderProductInfo = () => (
     <View style={styles.productInfo}>
-      <Text style={styles.brand}>{product.brand}</Text>
-      <Text style={styles.name}>{product.name}</Text>
+      <Text style={styles.brand}>{product?.thuonghieu || 'Thương hiệu'}</Text>
+      <Text style={styles.name}>{product?.tensp || 'Tên sản phẩm'}</Text>
       
       <View style={styles.ratingContainer}>
-        <Text style={styles.rating}>⭐ {product.rating}</Text>
-        <Text style={styles.reviewCount}>({product.reviewCount} đánh giá)</Text>
+        <Text style={styles.rating}>⭐ 4.5</Text>
+        <Text style={styles.reviewCount}>(0 đánh giá)</Text>
       </View>
 
       <View style={styles.priceContainer}>
-        <Text style={styles.currentPrice}>{formatPrice(product.price)}</Text>
-        {product.originalPrice && (
-          <Text style={styles.originalPrice}>{formatPrice(product.originalPrice)}</Text>
-        )}
-        {product.discount && (
-          <View style={styles.discountBadge}>
-            <Text style={styles.discountText}>-{product.discount}%</Text>
-          </View>
-        )}
+        <Text style={styles.currentPrice}>{formatPrice(product?.gia || 0)}</Text>
+        {/* Có thể thêm giá gốc và discount sau */}
       </View>
 
-      <Text style={styles.description}>{product.description}</Text>
+      <Text style={styles.description}>
+        Màu sắc: {product?.mausac || 'N/A'}{'\n'}
+        Kiểu dáng: {product?.kieudang || 'N/A'}{'\n'}
+        Kích thước: {product?.kichthuoc || 'N/A'}{'\n'}
+        Chất liệu: {product?.chatlieu || 'N/A'}
+      </Text>
     </View>
   );
 
@@ -82,40 +115,34 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ productId }) 
     <View style={styles.selectionSection}>
       <Text style={styles.sectionTitle}>Màu sắc</Text>
       <View style={styles.colorOptions}>
-        {product.colors.map((color) => (
-          <TouchableOpacity
-            key={color.name}
-            style={[
-              styles.colorOption,
-              selectedColor === color.name && styles.colorOptionSelected
-            ]}
-            onPress={() => setSelectedColor(color.name)}
-          >
-            <View style={[styles.colorCircle, { backgroundColor: color.code }]} />
-            <Text style={styles.colorName}>{color.name}</Text>
-          </TouchableOpacity>
-        ))}
+        <TouchableOpacity
+          style={[
+            styles.colorOption,
+            selectedColor === product?.mausac && styles.colorOptionSelected
+          ]}
+          onPress={() => setSelectedColor(product?.mausac || '')}
+        >
+          <View style={[styles.colorCircle, { backgroundColor: '#007AFF' }]} />
+          <Text style={styles.colorName}>{product?.mausac || 'Mặc định'}</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 
   const renderStorageSelection = () => (
     <View style={styles.selectionSection}>
-      <Text style={styles.sectionTitle}>Dung lượng</Text>
+      <Text style={styles.sectionTitle}>Kích thước</Text>
       <View style={styles.storageOptions}>
-        {product.storage.map((storage) => (
-          <TouchableOpacity
-            key={storage.size}
-            style={[
-              styles.storageOption,
-              selectedStorage === storage.size && styles.storageOptionSelected
-            ]}
-            onPress={() => setSelectedStorage(storage.size)}
-          >
-            <Text style={styles.storageCapacity}>{storage.size}</Text>
-            <Text style={styles.storagePrice}>{formatPrice(storage.price)}</Text>
-          </TouchableOpacity>
-        ))}
+        <TouchableOpacity
+          style={[
+            styles.storageOption,
+            selectedStorage === product?.kichthuoc && styles.storageOptionSelected
+          ]}
+          onPress={() => setSelectedStorage(product?.kichthuoc || '')}
+        >
+          <Text style={styles.storageCapacity}>{product?.kichthuoc || 'Mặc định'}</Text>
+          <Text style={styles.storagePrice}>{formatPrice(product?.gia || 0)}</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -145,33 +172,33 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ productId }) 
     <View style={styles.specificationsSection}>
       <Text style={styles.sectionTitle}>Thông số kỹ thuật</Text>
       <View style={styles.specificationsList}>
-          <View style={styles.specificationItem}>
-          <Text style={styles.specificationKey}>Size - kieu dang</Text>
-          <Text style={styles.specificationValue}>{product.specifications.frame.size} - {product.specifications.frame.shape}</Text>
+        <View style={styles.specificationItem}>
+          <Text style={styles.specificationKey}>Mã sản phẩm</Text>
+          <Text style={styles.specificationValue}>{product?.masp || 'N/A'}</Text>
         </View>
         <View style={styles.specificationItem}>
-          <Text style={styles.specificationKey}>Cong dung</Text>
-          <Text style={styles.specificationValue}>{product.specifications.lenses.coating}</Text>
+          <Text style={styles.specificationKey}>Thương hiệu</Text>
+          <Text style={styles.specificationValue}>{product?.thuonghieu || 'N/A'}</Text>
         </View>
         <View style={styles.specificationItem}>
-          <Text style={styles.specificationKey}>Gioi tinh</Text>
-          <Text style={styles.specificationValue}>{product.specifications.suitability.gender}</Text>
+          <Text style={styles.specificationKey}>Màu sắc</Text>
+          <Text style={styles.specificationValue}>{product?.mausac || 'N/A'}</Text>
         </View>
         <View style={styles.specificationItem}>
-          <Text style={styles.specificationKey}>Nhom nguoi</Text>
-          <Text style={styles.specificationValue}>{product.specifications.suitability.ageGroup}</Text>
+          <Text style={styles.specificationKey}>Kiểu dáng</Text>
+          <Text style={styles.specificationValue}>{product?.kieudang || 'N/A'}</Text>
         </View>
         <View style={styles.specificationItem}>
-          <Text style={styles.specificationKey}>Chiều rộng tròng kính</Text>
-          <Text style={styles.specificationValue}>{product.specifications.dimensions.lensWidth}</Text>
+          <Text style={styles.specificationKey}>Kích thước</Text>
+          <Text style={styles.specificationValue}>{product?.kichthuoc || 'N/A'}</Text>
         </View>
         <View style={styles.specificationItem}>
-          <Text style={styles.specificationKey}>Cầu kính (khoảng cách giữa 2 tròng</Text>
-          <Text style={styles.specificationValue}>{product.specifications.dimensions.bridge}</Text>
+          <Text style={styles.specificationKey}>Chất liệu</Text>
+          <Text style={styles.specificationValue}>{product?.chatlieu || 'N/A'}</Text>
         </View>
         <View style={styles.specificationItem}>
-          <Text style={styles.specificationKey}>Trọng lượng</Text>
-          <Text style={styles.specificationValue}>{product.specifications.dimensions.weight}</Text>
+          <Text style={styles.specificationKey}>Mã loại</Text>
+          <Text style={styles.specificationValue}>{product?.maloai || 'N/A'}</Text>
         </View>
       </View>
     </View>
@@ -195,6 +222,32 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ productId }) 
       />
     </View>
   );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Đang tải thông tin sản phẩm...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error || 'Không tìm thấy sản phẩm'}</Text>
+          <Button
+            title="Thử lại"
+            onPress={fetchProduct}
+            variant="primary"
+            style={styles.retryButton}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -437,6 +490,33 @@ const styles = StyleSheet.create({
   },
   buyNowButton: {
     marginBottom: Sizes.sm,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    padding: Sizes.lg,
+  },
+  errorText: {
+    fontSize: 16,
+    color: Colors.error,
+    textAlign: 'center',
+    marginBottom: Sizes.lg,
+  },
+  retryButton: {
+    minWidth: 120,
   },
 });
 

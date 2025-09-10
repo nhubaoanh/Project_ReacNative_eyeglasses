@@ -5,7 +5,9 @@ import ProductDetailScreen from '../../src/screens/product/ProductDetailScreen';
 const ProductDetailPage = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   
-  return <ProductDetailScreen productId={id} />;
+  // Ép kiểu string -> number
+  const productId = id ? Number(id) : undefined;
+  return <ProductDetailScreen productId={productId} />;
 };
 
 export default ProductDetailPage;

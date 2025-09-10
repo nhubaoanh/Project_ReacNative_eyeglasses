@@ -4,6 +4,7 @@ import { Image as ExpoImage } from 'expo-image';
 import { Colors } from '../../constants/colors';
 import { Sizes } from '../../constants/sizes';
 import { Product } from '../../src/lib/types/product.types';
+import apiService from '../../src/service/apiService';
 
 const { width } = Dimensions.get('window');
 
@@ -20,15 +21,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
     }).format(price);
   };
 
+  // Tạo URL ảnh đầy đủ
+  const getImageSource = () => {
+    if (!product.hinhanh) {
+      return { uri: 'https://via.placeholder.com/300x200?text=No+Image' };
+    }
+    
+    const imageUrl = apiService.getImageUrl(product.hinhanh);
+    return { uri: imageUrl };
+  };
+
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8} >
       <View style={styles.imageContainer}>
         <ExpoImage
-          source={(product.images && product.images[0]) || product.thumbnail || undefined}
+          source={getImageSource()}
           style={styles.image}
           contentFit="cover"
+          placeholder="https://via.placeholder.com/300x200?text=Loading..."
+          transition={200}
         />
-        
+{/*         
         {product.discount && (
           <View style={styles.discountBadge}>
             <Text style={styles.discountText}>-{product.discount}%</Text>
@@ -39,33 +52,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
           <View style={styles.newBadge}>
             <Text style={styles.newBadgeText}>MỚI</Text>
           </View>
-        )}
+        )} */}
       </View>
       
       <View style={styles.content}>
-        <Text style={styles.brand}>{product.brand}</Text>
-        <Text style={styles.name} numberOfLines={2}>{product.name}</Text>
+        <Text style={styles.brand}>{product.thuonghieu}</Text>
+        <Text style={styles.name} numberOfLines={2}>{product.tensp}</Text>
         
-        <View style={styles.ratingContainer}>
+        {/* <View style={styles.ratingContainer}>
           <Text style={styles.rating}>⭐ {product.rating}</Text>
           <Text style={styles.reviewCount}>({product.reviewCount})</Text>
-        </View>
+        </View> */}
         
         <View style={styles.priceContainer}>
-          <Text style={styles.currentPrice}>{formatPrice(product.price)}</Text>
-          {product.originalPrice && (
-            <Text style={styles.originalPrice}>{formatPrice(product.originalPrice)}</Text>
+          <Text style={styles.currentPrice}>{formatPrice(product.gia)}</Text>
+          {product.gia && (
+            <Text style={styles.originalPrice}>{formatPrice(product.gia)}</Text>
           )}
         </View>
         
-        <View style={styles.stockStatus}>
+        {/* <View style={styles.stockStatus}>
           <Text style={[
             styles.stockText,
             { color: product.inStock ? Colors.success : Colors.error }
           ]}>
             {product.inStock ? 'Còn hàng' : 'Hết hàng'}
           </Text>
-        </View>
+        </View> */}
       </View>
     </TouchableOpacity>
   );

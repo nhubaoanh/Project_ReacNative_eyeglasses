@@ -9,7 +9,8 @@ export default function DrawerLayout(){
             drawerInactiveTintColor: "#8E8E93", // màu khi không chọn
             headerTintColor: "#007AFF", // màu header
         }}>
-            <Drawer.Screen name="index" options={{title:"Home"}}/>
+            <Drawer.Screen name="index" options={{title:"🏠 Home",drawerLabel: "Trang chủ"}}/>
+            <Drawer.Screen name="admin" options={{title:"🔧 Admin",drawerLabel: "Quản trị"}}/>
         </Drawer>
     )
 }
