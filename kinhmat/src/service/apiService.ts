@@ -1,5 +1,7 @@
 // API Service - Quản lý tất cả API calls
-const API_BASE_URL = 'http://192.168.0.102:7890/api';
+// const API_BASE_URL = 'http://192.168.0.102:7890/api';
+// const API_BASE_URL = 'https://kdckwr3m-7890.asse.devtunnels.ms/api';
+const API_BASE_URL = process.env.EXPO_PUBLIC_URL_API || 'http://localhost:7890/api';
 
 // Định nghĩa types
 interface ApiResponse<T> {
@@ -34,11 +36,23 @@ interface Customer {
   sdt?: string;
 }
 
+interface OrderItem {
+  masp: number;
+  tensp: string;
+  hinhanh: string;
+  soluong: number;
+  dongia: string; // giữ string vì backend trả string
+}
+
 interface Order {
-  id?: number;
-  ngay_tao?: string;
-  tong_tien?: number;
-  trang_thai?: string;
+  madh: number;
+  makh: number;
+  ngaydat: string;
+  tongtien: string;     // <-- đổi thành string
+  matrangthai: number;
+  diachi_giao: string;
+  mapt?: number;        // <-- cho optional vì API chưa trả
+  items: OrderItem[];
 }
 
 interface Supplier {
@@ -60,6 +74,11 @@ class ApiService {
   async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
     
+    console.log('=== API REQUEST ===');
+    // console.log('URL:', url);
+    // console.log('Method:', options.method || 'GET');
+    // console.log('Body:', options.body);
+    
     const defaultOptions: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -73,11 +92,18 @@ class ApiService {
         ...options
       });
 
+      // console.log('Response status:', response.status);
+      // console.log('Response headers:', response.headers);
+
       const text = await response.text();
+      // console.log('Response text:', text);
+      
       if (!response.ok) {
+        console.error('Response not OK:', response.status);
         // try parse error payload if json
         try {
           const errJson = JSON.parse(text);
+          console.error('Error JSON:', errJson);
           return { success: false, error: errJson?.error || `HTTP ${response.status}` };
         } catch {
           return { success: false, error: `HTTP ${response.status}` };
@@ -86,8 +112,11 @@ class ApiService {
 
       try {
         const data = text ? JSON.parse(text) : undefined;
+        // console.log('Parsed response data:', data);
+        // console.log('=== END API REQUEST ===');
         return { success: true, data } as ApiResponse<T>;
       } catch {
+        console.error('Failed to parse JSON response');
         return { success: false, error: 'Invalid JSON response' };
       }
     } catch (error) {
@@ -204,9 +233,14 @@ class ApiService {
   }
 
   // ===== HÓA ĐƠN (ORDERS) =====
-  async getAllOrders(): Promise<ApiResponse<Order[]>> {
-    return this.makeRequest<Order[]>('/hoadon');
+  // async getAllOrders(): Promise<ApiResponse<Order[]>> {
+  //   return this.makeRequest<Order[]>('/orders');
+  // }
+  async getAllOrders(): Promise<Order[]> {
+    const res = await this.makeRequest<any>('/orders');
+    return res.data?.data ?? []; // chỉ return mảng orders
   }
+
 
   async getOrderById(id: number): Promise<ApiResponse<Order>> {
     return this.makeRequest<Order>(`/hoadon/${id}`);
@@ -261,131 +295,14 @@ class ApiService {
     });
   }
 
-  // ===== UPLOAD ẢNH =====
-  async convertImageToBase64(imageUri: string): Promise<string> {
-    try {
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
-      
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const base64 = reader.result as string;
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } catch (error) {
-      console.error('Error converting image to base64:', error);
-      throw error;
-    }
+  // ==================== Cập nhật hình ảnh sản phẩm=====================
+  async updateProductImage(id : number, data : {imageUri: string}): Promise<ApiResponse<Product>> {
+    return this.makeRequest<Product>(`/sanpham/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
   }
 
-  async uploadImage(imageUri: string): Promise<ApiResponse<any>> {
-    try {
-      // Convert image to base64
-      const base64Image = await this.convertImageToBase64(imageUri);
-      
-      const response = await fetch(`${this.baseURL}/upload`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          imageBase64: base64Image
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Upload error response:', errorText);
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      return { success: true, data };
-    } catch (error) {
-      console.error('Upload Image Error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      };
-    }
-  }
-
-  async uploadAndUpdateProduct(productId: number, imageUri: string): Promise<ApiResponse<Product>> {
-    try {
-      console.log('Starting uploadAndUpdateProduct for product:', productId);
-      
-      // Convert image to base64
-      const base64Image = await this.convertImageToBase64(imageUri);
-      console.log('Image converted to base64, length:', base64Image.length);
-      
-      // Get current product data
-      const productResult = await this.getProductById(productId);
-      if (!productResult.success || !productResult.data) {
-        return { success: false, error: 'Failed to get product data' };
-      }
-
-      console.log('Current product data:', productResult.data);
-      console.log('Current hinhanh field:', productResult.data.hinhanh);
-
-      // Send image to backend and get the image path
-      const uploadResponse = await fetch(`${this.baseURL}/sanpham/${productId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...productResult.data,
-          imageBase64: base64Image
-        })
-      });
-
-      console.log('Upload response status:', uploadResponse.status);
-      console.log('Upload response headers:', uploadResponse.headers);
-
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        console.error('Upload error response:', errorText);
-        return { success: false, error: `Upload failed: ${errorText}` };
-      }
-
-      const responseText = await uploadResponse.text();
-      console.log('Raw backend response:', responseText);
-
-      let backendResponse;
-      try {
-        backendResponse = JSON.parse(responseText);
-        console.log('Parsed backend response:', backendResponse);
-        console.log('Updated hinhanh field from backend:', backendResponse?.hinhanh);
-      } catch (parseError) {
-        console.error('Failed to parse response as JSON:', parseError);
-        return { success: false, error: 'Invalid JSON response from server' };
-      }
-
-      // Backend returns {success, message, hinhanh}, but we need to return the updated product
-      if (backendResponse.success && backendResponse.hinhanh) {
-        // Update the product data with the new image path
-        const updatedProduct = {
-          ...productResult.data,
-          hinhanh: backendResponse.hinhanh
-        };
-        
-        console.log('Final updated product:', updatedProduct);
-        return { success: true, data: updatedProduct };
-      } else {
-        return { success: false, error: backendResponse.message || 'Upload failed' };
-      }
-    } catch (error) {
-      console.error('Upload Product Image Error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      };
-    }
-  }
 
   // Helper method để tạo full URL cho ảnh
   getImageUrl(imagePath: string): string {

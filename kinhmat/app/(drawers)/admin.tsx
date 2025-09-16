@@ -1,3 +1,4 @@
+import { uploadToCloudinary } from '@/src/service/cloudinary';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import {
@@ -15,6 +16,13 @@ import {
   View
 } from 'react-native';
 import apiService, { Product } from '../../src/service/apiService';
+
+// Test biến môi trường
+console.log('=== TESTING ENVIRONMENT VARIABLES ===');
+console.log('process.env.EXPO_PUBLIC_URL_API:', process.env.EXPO_PUBLIC_URL_API);
+console.log('process.env.URL_API:', process.env.URL_API);
+console.log('All env vars:', Object.keys(process.env).filter(key => key.includes('URL')));
+console.log('==========================================');
 
 const AdminScreen: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -87,19 +95,27 @@ const AdminScreen: React.FC = () => {
       setUploading(productId);
       console.log('Starting upload for product:', productId, 'with image:', imageUri);
       
-      const result = await apiService.uploadAndUpdateProduct(productId, imageUri);
+      // Step 1: Upload to Cloudinary first
+      console.log('Uploading to Cloudinary...');
+      const cloudinaryResult = await uploadToCloudinary(imageUri);
+      console.log('Cloudinary upload result:', cloudinaryResult);
       
-      console.log('Upload result:', result);
+      if (!cloudinaryResult.secure_url) {
+        throw new Error('Failed to get Cloudinary URL');
+      }
+      
+      // Step 2: Save Cloudinary URL to database
+      console.log('Saving Cloudinary URL to database:', cloudinaryResult.secure_url);
+      const result = await apiService.updateProductImage(productId, cloudinaryResult.secure_url);
+      
+      console.log('Database update result:', result);
       
       if (result.success) {
-        console.log('Upload successful, updated product data:', result.data);
-        console.log('Image path in response:', result.data?.hinhanh);
-        
         Alert.alert('Thành công', 'Cập nhật ảnh sản phẩm thành công!');
         await fetchProducts(); // Refresh danh sách
       } else {
-        console.error('Upload failed:', result.error);
-        Alert.alert('Lỗi upload', result.error || 'Không thể upload ảnh');
+        console.error('Database update failed:', result.error);
+        Alert.alert('Lỗi', result.error || 'Không thể cập nhật database');
       }
     } catch (error) {
       console.error('Upload exception:', error);

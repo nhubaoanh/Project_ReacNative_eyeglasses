@@ -65,6 +65,7 @@ export default function HomeScreen(){
             if (productsRes.success && productsRes.data) {
                 setProducts(productsRes.data);
             }
+            console.log("như bảo anh quá đẹp zai")
 
         } catch (err) {
             console.error('Error fetching data:', err);
@@ -91,6 +92,7 @@ export default function HomeScreen(){
     const handleProductPress = (productId: number) => {
         router.push({ pathname: "/product/[id]", params: { id: productId.toString() } });
         console.log('Product ID:', productId);
+        // console.log('Product name:', products.find((product) => product.masp === productId)?.tensp);
     };
 
     const renderBanner = ({ item }: { item: any }) => (
@@ -281,7 +283,7 @@ export default function HomeScreen(){
                                 <Text style={styles.errorText}>{error}</Text>
                             ) : (
                                 <View style={styles.productsGrid}>
-                                    {products.slice(0, 4).map((product) => (
+                                    {products.slice().map((product) => (
                                         <View key={product.masp} style={styles.productGridItem}>
                                             <ProductCard 
                                                 product={{

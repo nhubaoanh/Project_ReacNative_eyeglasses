@@ -8,21 +8,58 @@ this.matrangthai = don_hang.matrangthai;
 this.mapt = don_hang.mapt;
 this.diachi_giao = don_hang.diachi_giao;
 };
-don_hang.getById = (id, callback) => {
-  const sqlString = "SELECT * FROM don_hang WHERE id = ? ";
-  db.query(sqlString, id, (err, result) => {
-    if (err) return callback(err);
-    callback(result);
-  });
-};
+// };
+// don_hang.getById = (id, callback) => {
+//   const sqlString = "SELECT * FROM don_hang WHERE id = ? ";
+//   db.query(sqlString, id, (err, result) => {
+//     if (err) return callback(err);
+//     callback(result);
+//   });
+// };
+
+// don_hang.getAll = (callback) => {
+//   const sqlString = "SELECT * FROM don_hang";
+//   db.query(sqlString, (err, result) => {
+//     if (err) return callback(err);
+//     callback(result);
+//   });
+// };
 
 don_hang.getAll = (callback) => {
-  const sqlString = "SELECT * FROM don_hang";
-  db.query(sqlString, (err, result) => {
-    if (err) return callback(err);
-    callback(result);
-  });
-};
+    db.query(
+      `SELECT 
+        dh.madh, dh.makh, dh.ngaydat, dh.tongtien, dh.matrangthai, dh.diachi_giao,
+        ctdh.masp, ctdh.soluong, ctdh.dongia,
+        sp.tensp, sp.hinhanh
+      FROM don_hang dh
+      LEFT JOIN ct_don_hang ctdh ON dh.madh = ctdh.madh
+      LEFT JOIN san_pham sp ON ctdh.masp = sp.masp
+      ORDER BY dh.madh DESC`,
+      (err, rows) => {
+        if (err) return callback(err);
+        callback(null, rows);
+      }
+    );
+  },
+
+don_hang.getById = (id, callback) => {
+    db.query(
+      `SELECT 
+        dh.madh, dh.makh, dh.ngaydat, dh.tongtien, dh.matrangthai, dh.diachi_giao,
+        ctdh.masp, ctdh.soluong, ctdh.dongia,
+        sp.tensp, sp.hinhanh
+      FROM don_hang dh
+      LEFT JOIN ct_don_hang ctdh ON dh.madh = ctdh.madh
+      LEFT JOIN san_pham sp ON ctdh.masp = sp.masp
+      WHERE dh.madh = ?`,
+      [id],
+      (err, rows) => {
+        if (err) return callback(err);
+        callback(null, rows);
+      }
+    );
+  },
+
 
 don_hang.insert = (don_hang, callback) => {
   const sqlString = "INSERT INTO don_hang SET ?";

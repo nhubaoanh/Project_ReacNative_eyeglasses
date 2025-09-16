@@ -1,4 +1,4 @@
-import { OrderListScreen } from "@/src/screens/orders/orderListScreen";
+import OrderListScreen from "@/src/screens/orders/orderListScreen";
 
 export default function Order(){
     const handleBack = () => {
@@ -11,8 +11,8 @@ export default function Order(){
     };
     return(
         <OrderListScreen
-            onBack={handleBack}
-            onOrderDetail={handleCheckout}
+            // onBack={handleBack}
+            // onOrderDetail={handleCheckout}
         />
     )
 }

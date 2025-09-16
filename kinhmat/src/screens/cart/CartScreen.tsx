@@ -3,7 +3,7 @@ import { Sizes } from "@/constants/sizes";
 import { Button } from "@/src/components/ui/Button";
 import { Product } from "@/src/lib/types/product.types";
 import React, { useState } from "react";
-import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert } from "react-native";
+import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 
 interface CartItem{
@@ -308,7 +308,7 @@ export const CartScreen :React.FC<CartScreenProps> = ({
 
     const updateprice = () => {
         return cartItems.reduce((total, item) => {
-            return total + item.product.price * item.quantity;
+            return total + item.product.gia * item.quantity;
         }, 0)
     }
 
