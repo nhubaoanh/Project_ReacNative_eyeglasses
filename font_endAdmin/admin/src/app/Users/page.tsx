@@ -1,89 +1,85 @@
-"use client"
-import React from 'react';
-import { Space, Table, Tag } from 'antd';
+"use client";
+import React, { useEffect, useState } from "react";
+import { Space, Table, Tag } from "antd";
+import productService from "../services/product.service";
+import Product from "../types/product";
 
-const { Column, ColumnGroup } = Table;
+const { Column } = Table;
 
 interface DataType {
-    STT : number;
-  key: React.Key;
-  firstName: string;
-  lastName: string;
-  age: number;
-  address: string;
-  tags: string[];
+  STT: number;
+  productId: number;
+  name: string; // tensp
+  categoryId: number; // maloai
+  brand: string; // thuonghieu
+  img: string; // hinhanh
+  price: number; // gia
+  color: string; // mausac
+  tyle: string; // kieudang
+  size: string; // kichthuoc
+  material: string; // chatlieu
+  tags: string[]; // ✅ thêm tags để match với render
 }
 
-const data: DataType[] = [
-  {
-    STT : 1,
-    key: '1',
-    firstName: 'John',
-    lastName: 'Brown',
-    age: 32,
-    address: 'New York No. 1 Lake Park',
-    tags: ['nice', 'developer'],
-  },
-  {
-    STT : 2,
-    key: '2',
-    firstName: 'Jim',
-    lastName: 'Green',
-    age: 42,
-    address: 'London No. 1 Lake Park',
-    tags: ['loser'],
-  },
-  {
-    STT : 3,
-    key: '3',
-    firstName: 'Joe',
-    lastName: 'Black',
-    age: 32,
-    address: 'Sydney No. 1 Lake Park',
-    tags: ['cool', 'teacher'],
-  },
-];
+const Users: React.FC = () => {
+  const [items, setItems] = useState<DataType[]>([]);
 
-const Users: React.FC = () => (
-  <Table<DataType> dataSource={data}>
-    <Column title="STT" dataIndex="STT" key="STT" />
-    <ColumnGroup title="Name">
-      <Column title="First Name" dataIndex="firstName" key="firstName" />
-      <Column title="Last Name" dataIndex="lastName" key="lastName" />
-    </ColumnGroup>
-    <Column title="Age" dataIndex="age" key="age" />
-    <Column title="Address" dataIndex="address" key="address" />
-    <Column
-      title="Tags"
-      dataIndex="tags"
-      key="tags"
-      render={(tags: string[]) => (
-        <>
-          {tags.map((tag) => {
-            let color = tag.length > 5 ? 'geekblue' : 'green';
-            if (tag === 'loser') {
-              color = 'volcano';
-            }
-            return (
-              <Tag color={color} key={tag}>
-                {tag.toUpperCase()}
-              </Tag>
-            );
-          })}
-        </>
-      )}
-    />
-    <Column
-      title="Action"
-      key="action"
-      render={(_: any, record: DataType) => (
-        <Space size="middle">
-          <a>Invite {record.lastName}</a>
-          <a>Delete</a>
-        </Space>
-      )}
-    />
-  </Table>
-);
+  useEffect(() => {
+    fetching();
+  }, []);
+
+  const fetching = async () => {
+    try {
+      const res = await productService.getAllProducts();
+      const products: Product[] = res.data ?? [];
+
+      // map Product -> DataType để Table dùng
+      const mapped = products.map((p, index) => ({
+        STT: index + 1,
+        productId: p.masp ?? index, // fallback nếu masp null
+        name: p.tensp,
+        categoryId: p.maloai,
+        brand: p.thuonghieu,
+        img: p.hinhanh,
+        price: p.gia,
+        color: p.mausac,
+        tyle: p.kieudang,
+        size: p.kichthuoc,
+        material: p.chatlieu,
+        tags: [p.thuonghieu, p.mausac].filter(Boolean) as string[], // ví dụ tự tạo tags
+      }));
+
+      setItems(mapped);
+    } catch (error) {
+      console.error("Fetch products failed:", error);
+    }
+  };
+
+  return (
+    <Table<DataType> dataSource={items} rowKey="productId">
+      <Column title="STT" dataIndex="STT" key="STT" />
+      <Column title="productId" dataIndex="productId" key="productId" />
+      <Column title="Name" dataIndex="name" key="name" />
+      <Column title="categoryId" dataIndex="categoryId" key="categoryId" />
+      <Column title="brand" dataIndex="brand" key="brand" />
+      <Column title="color" dataIndex="color" key="color" />
+      <Column title="tyle" dataIndex="tyle" key="tyle" />
+      <Column title="size" dataIndex="size" key="size" />
+      <Column title="material" dataIndex="material" key="material" />
+      <Column title="Price" dataIndex="price" key="price" />
+      <Column title="CategoryId" dataIndex="categoryId" key="categoryId" />
+      <Column
+        title="Action"
+        key="action"
+        render={(_: any, record: DataType) => (
+          <Space size="middle">
+            <a>Edit {record.name}</a>
+            <a>Delete</a>
+          </Space>
+        )}
+      />
+    </Table>
+  );
+};
 
 export default Users;

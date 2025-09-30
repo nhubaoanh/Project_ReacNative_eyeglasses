@@ -2,7 +2,7 @@
 import { Colors } from "@/constants/colors";
 import { Sizes } from "@/constants/sizes";
 import { Button } from "@/src/components/ui/Button";
-import { Product } from "@/src/lib/types/product.types";
+import Product from "@/src/types/product";
 import React from "react";
 import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
