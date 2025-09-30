@@ -1,670 +1,345 @@
+// src/screens/cart/CartScreen.tsx
 import { Colors } from "@/constants/colors";
 import { Sizes } from "@/constants/sizes";
 import { Button } from "@/src/components/ui/Button";
 import { Product } from "@/src/lib/types/product.types";
-import React, { useState } from "react";
+import React from "react";
 import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-
-interface CartItem{
-    product: Product;
-    quantity: number;
-    selectedColor: any;
-    selectedStorage: any;
+interface CartItem {
+  product: Product;
+  quantity: number;
+  selectedColor: string;
+  selectedSize: string;
 }
 
 interface CartScreenProps {
   onBack: () => void;
   onCheckout: () => void;
+  cartItems: CartItem[];
+  removeFromCart: (productId: number) => void;
+  updateQuantity: (productId: number, quantity: number) => void;
+  clearCart: () => void;
+  totalItems: number;
+  totalPrice: number;
 }
 
-
-export const CartScreen :React.FC<CartScreenProps> = ({
-    onBack, 
-    onCheckout,
+const CartScreen: React.FC<CartScreenProps> = ({
+  onBack,
+  onCheckout,
+  cartItems = [],
+  removeFromCart,
+  updateQuantity,
+  clearCart,
+  totalItems = 0,
+  totalPrice = 0,
 }) => {
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
-        }).format(price);
-    };
+  const updateItemQuantity = (productId: number, newQuantity: number) => {
+    if (newQuantity < 1) return;
+    updateQuantity(productId, newQuantity);
+  };
 
-    const updateQuantity = (index: number, newQuantity: number) => {
-        if (newQuantity < 1) return;
-        
-        const newCartItems = [...cartItems];
-        newCartItems[index].quantity = newQuantity;
-        setCartItems(newCartItems);
-    };
-
-        const removeItem = (index: number) => {
-        Alert.alert(
-        'Xác nhận',
-        'Bạn có muốn xóa sản phẩm này khỏi giỏ hàng?',
-        [
-            { text: 'Hủy', style: 'cancel' },
-            {
-            text: 'Xóa',
-            style: 'destructive',
-            onPress: () => {
-                const newCartItems = cartItems.filter((_, i) => i !== index);
-                setCartItems(newCartItems);
-            },
-            },
-        ]
-        );
-    };
-    
-    // logic bài
-    const [cartItems, setCartItems] = useState<CartItem[]>([
+  const handleRemoveItem = (productId: number) => {
+    Alert.alert(
+      'Xác nhận',
+      'Bạn có muốn xóa sản phẩm này khỏi giỏ hàng?',
+      [
+        { text: 'Hủy', style: 'cancel' },
         {
-            product: {
-                id: '1',
-                name: 'Kính cận gọng tròn Titan',
-                brand: 'Gentle Monster',
-                model: 'Round Titan 2024',
-                price: 1990000,
-                originalPrice: 2290000,
-                discount: 13,
-                images: [
-                    'https://cdn.tgdd.vn/Files/2019/07/21/1180759/xuhuongmatkinh20191.jpg',
-                    'https://via.placeholder.com/400x400/007AFF/FFFFFF?text=Kinh+can+Titan+2',
-                    'https://via.placeholder.com/400x400/007AFF/FFFFFF?text=Kinh+can+Titan+3',
-                ],
-                thumbnail: 'https://cdn.tgdd.vn/Files/2019/07/21/1180759/xuhuongmatkinh20191.jpg',
-                description: 'Kính cận gọng Titan nhẹ, thiết kế gọng tròn trẻ trung, phù hợp nam nữ.',
-                specifications: {
-                    frame: {
-                        material: 'Titan',
-                        shape: 'Tròn',
-                        size: '50-20-140 mm',
-                        weight: '20 g'
-                    },
-                    lenses: {
-                        type: 'Cận',
-                        coating: 'Chống trầy, chống UV',
-                        features: ['Blue Cut']
-                    },
-                    suitability: {
-                        gender: 'Unisex',
-                        ageGroup: 'Người lớn',
-                        prescription: true
-                    },
-                    dimensions: {
-                        lensWidth: '50 mm',
-                        bridge: '20 mm',
-                        templeLength: '140 mm',
-                        weight: '20 g'
-                    }
-                },
-                colors: [
-                    { name: 'Đen', code: '#000000', available: true },
-                    { name: 'Bạc', code: '#C0C0C0', available: true }
-                ],
-                storage: [
-                    { size: 'Chuẩn', price: 1990000, available: true }
-                ],
-                rating: 4.7,
-                reviewCount: 312,
-                inStock: true,
-                isNew: true,
-                isFeatured: true,
-                category: 'glasses',
-                tags: ['Kính cận', 'Titan', 'Gọng tròn'],
-                createdAt: new Date('2024-03-10'),
-                updatedAt: new Date('2024-03-10')
-            },
-            quantity: 1,
-            selectedColor: { name: 'Đen', code: '#000000', available: true },
-            selectedStorage: { size: 'Chuẩn', price: 1990000, available: true },
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: () => removeFromCart(productId),
         },
-        {
-            product: {
-                id: '2',
-                name: 'Kính cận vuông tròn Titan',
-                brand: 'Gentle Monster',
-                model: 'Round Titan 2024',
-                price: 1990000,
-                originalPrice: 2290000,
-                discount: 13,
-                images: [
-                    'https://cdn.tgdd.vn/Files/2019/07/21/1180759/xuhuongmatkinh20191.jpg',
-                    'https://via.placeholder.com/400x400/007AFF/FFFFFF?text=Kinh+can+Titan+2',
-                    'https://via.placeholder.com/400x400/007AFF/FFFFFF?text=Kinh+can+Titan+3',
-                ],
-                thumbnail: 'https://cdn.tgdd.vn/Files/2019/07/21/1180759/xuhuongmatkinh20191.jpg',
-                description: 'Kính cận gọng Titan nhẹ, thiết kế gọng tròn trẻ trung, phù hợp nam nữ.',
-                specifications: {
-                    frame: {
-                        material: 'Titan',
-                        shape: 'Tròn',
-                        size: '50-20-140 mm',
-                        weight: '20 g'
-                    },
-                    lenses: {
-                        type: 'Cận',
-                        coating: 'Chống trầy, chống UV',
-                        features: ['Blue Cut']
-                    },
-                    suitability: {
-                        gender: 'Unisex',
-                        ageGroup: 'Người lớn',
-                        prescription: true
-                    },
-                    dimensions: {
-                        lensWidth: '50 mm',
-                        bridge: '20 mm',
-                        templeLength: '140 mm',
-                        weight: '20 g'
-                    }
-                },
-                colors: [
-                    { name: 'Đen', code: '#000000', available: true },
-                    { name: 'Bạc', code: '#C0C0C0', available: true }
-                ],
-                storage: [
-                    { size: 'Chuẩn', price: 1990000, available: true }
-                ],
-                rating: 4.7,
-                reviewCount: 312,
-                inStock: true,
-                isNew: true,
-                isFeatured: true,
-                category: 'glasses',
-                tags: ['Kính cận', 'Titan', 'Gọng tròn'],
-                createdAt: new Date('2024-03-10'),
-                updatedAt: new Date('2024-03-10')
-            },
-            quantity: 1,
-            selectedColor: { name: 'Đen', code: '#000000', available: true },
-            selectedStorage: { size: 'Chuẩn', price: 1990000, available: true },
-        },
-        {
-            product: {
-                id: '3',
-                name: 'Kính cận gọng oval Titan',
-                brand: 'Gentle Monster',
-                model: 'Round Titan 2024',
-                price: 1990000,
-                originalPrice: 2290000,
-                discount: 13,
-                images: [
-                    'https://cdn.tgdd.vn/Files/2019/07/21/1180759/xuhuongmatkinh20191.jpg',
-                    'https://via.placeholder.com/400x400/007AFF/FFFFFF?text=Kinh+can+Titan+2',
-                    'https://via.placeholder.com/400x400/007AFF/FFFFFF?text=Kinh+can+Titan+3',
-                ],
-                thumbnail: 'https://cdn.tgdd.vn/Files/2019/07/21/1180759/xuhuongmatkinh20191.jpg',
-                description: 'Kính cận gọng Titan nhẹ, thiết kế gọng tròn trẻ trung, phù hợp nam nữ.',
-                specifications: {
-                    frame: {
-                        material: 'Titan',
-                        shape: 'Tròn',
-                        size: '50-20-140 mm',
-                        weight: '20 g'
-                    },
-                    lenses: {
-                        type: 'Cận',
-                        coating: 'Chống trầy, chống UV',
-                        features: ['Blue Cut']
-                    },
-                    suitability: {
-                        gender: 'Unisex',
-                        ageGroup: 'Người lớn',
-                        prescription: true
-                    },
-                    dimensions: {
-                        lensWidth: '50 mm',
-                        bridge: '20 mm',
-                        templeLength: '140 mm',
-                        weight: '20 g'
-                    }
-                },
-                colors: [
-                    { name: 'Đen', code: '#000000', available: true },
-                    { name: 'Bạc', code: '#C0C0C0', available: true }
-                ],
-                storage: [
-                    { size: 'Chuẩn', price: 1990000, available: true }
-                ],
-                rating: 4.7,
-                reviewCount: 312,
-                inStock: true,
-                isNew: true,
-                isFeatured: true,
-                category: 'glasses',
-                tags: ['Kính cận', 'Titan', 'Gọng tròn'],
-                createdAt: new Date('2024-03-10'),
-                updatedAt: new Date('2024-03-10')
-            },
-            quantity: 1,
-            selectedColor: { name: 'Đen', code: '#000000', available: true },
-            selectedStorage: { size: 'Chuẩn', price: 1990000, available: true },
-        },
-        {
-            product: {
-                id: '4',
-                name: 'Kính cận gọng tròn Titan',
-                brand: 'Gentle Monster',
-                model: 'Round Titan 2024',
-                price: 1990000,
-                originalPrice: 2290000,
-                discount: 13,
-                images: [
-                    'https://cdn.tgdd.vn/Files/2019/07/21/1180759/xuhuongmatkinh20191.jpg',
-                    'https://via.placeholder.com/400x400/007AFF/FFFFFF?text=Kinh+can+Titan+2',
-                    'https://via.placeholder.com/400x400/007AFF/FFFFFF?text=Kinh+can+Titan+3',
-                ],
-                thumbnail: 'https://cdn.tgdd.vn/Files/2019/07/21/1180759/xuhuongmatkinh20191.jpg',
-                description: 'Kính cận gọng Titan nhẹ, thiết kế gọng tròn trẻ trung, phù hợp nam nữ.',
-                specifications: {
-                    frame: {
-                        material: 'Titan',
-                        shape: 'Tròn',
-                        size: '50-20-140 mm',
-                        weight: '20 g'
-                    },
-                    lenses: {
-                        type: 'Cận',
-                        coating: 'Chống trầy, chống UV',
-                        features: ['Blue Cut']
-                    },
-                    suitability: {
-                        gender: 'Unisex',
-                        ageGroup: 'Người lớn',
-                        prescription: true
-                    },
-                    dimensions: {
-                        lensWidth: '50 mm',
-                        bridge: '20 mm',
-                        templeLength: '140 mm',
-                        weight: '20 g'
-                    }
-                },
-                colors: [
-                    { name: 'Đen', code: '#000000', available: true },
-                    { name: 'Bạc', code: '#C0C0C0', available: true }
-                ],
-                storage: [
-                    { size: 'Chuẩn', price: 1990000, available: true }
-                ],
-                rating: 4.7,
-                reviewCount: 312,
-                inStock: true,
-                isNew: true,
-                isFeatured: true,
-                category: 'glasses',
-                tags: ['Kính cận', 'Titan', 'Gọng tròn'],
-                createdAt: new Date('2024-03-10'),
-                updatedAt: new Date('2024-03-10')
-            },
-            quantity: 1,
-            selectedColor: { name: 'Đen', code: '#000000', available: true },
-            selectedStorage: { size: 'Chuẩn', price: 1990000, available: true },
-        }
-    ]);
+      ]
+    );
+  };
 
-    const [newprice, setNewprive] = useState(1);
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <TouchableOpacity 
+        style={styles.backButton} 
+        onPress={onBack}
+      >
+        <Text style={styles.backIcon}>←</Text>
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Giỏ hàng</Text>
+      {cartItems.length > 0 && (
+        <TouchableOpacity onPress={clearCart}>
+          <Text style={styles.clearButton}>Xóa tất cả</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
 
-    const updateprice = () => {
-        return cartItems.reduce((total, item) => {
-            return total + item.product.gia * item.quantity;
-        }, 0)
-    }
-
-    // header cart
-    const renderHeader= () => (
-        <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton} >
-                <Text style={styles.backIcon}>←</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Giỏ hàng</Text>
-            <TouchableOpacity onPress={() => setCartItems([])}>
-                <Text>Xóa tất cả</Text>
-            </TouchableOpacity>
-        </View>
-    )
-
-    // cart item
-    const renderCartItem = (item: CartItem, index: number) => (
-        <View key={index} style={styles.cartItem}>
-        <Image source={{ uri: item.product.thumbnail }} style={styles.itemImage} />
+  const renderCartItem = (item: CartItem, index: number) => {
+    const product = item.product;
+    return (
+      <View key={`${product.masp}-${index}`} style={styles.cartItem}>
+        <Image 
+          source={{ uri: product.hinhanh }} 
+          style={styles.itemImage} 
+          resizeMode="contain"
+        />
         
         <View style={styles.itemInfo}>
-            <Text style={styles.itemBrand}>{item.product.brand}</Text>
-            <Text style={styles.itemName} numberOfLines={2}>
-            {item.product.name}
-            </Text>
-            
-            <View style={styles.itemOptions}>
+          <Text style={styles.itemName} numberOfLines={2}>
+            {product.tensp}
+          </Text>
+          
+          <View style={styles.itemOptions}>
             <Text style={styles.itemOption}>
-                Màu: {item.selectedColor.name}
+              Màu: {item.selectedColor}
             </Text>
             <Text style={styles.itemOption}>
-                kiểu dáng: {item.selectedStorage.size}
+              Kích thước: {item.selectedSize}
             </Text>
-            </View>
-            
-            <View style={styles.itemPrice}>
-            <Text style={styles.currentPrice}>
-                {item.selectedStorage.price ? formatPrice(item.selectedStorage.price * item.quantity) : formatPrice(0)}
-            </Text>
-            {item.product.originalPrice && (
-                <Text style={styles.originalPrice}>
-                {formatPrice(item.product.originalPrice)}
-                </Text>
-            )}
-            </View>
+          </View>
+          
+          <Text style={styles.itemPrice}>
+            {new Intl.NumberFormat('vi-VN', {
+              style: 'currency',
+              currency: 'VND',
+            }).format(product.gia * item.quantity)}
+          </Text>
         </View>
         
         <View style={styles.itemActions}>
-            <View style={styles.quantityContainer}>
+          <View style={styles.quantityContainer}>
             <TouchableOpacity
-                style={styles.quantityButton}
-                onPress={() => updateQuantity(index, item.quantity - 1)}
+              style={styles.quantityButton}
+              onPress={() => updateItemQuantity(product.masp!, item.quantity - 1)}
             >
-                <Text style={styles.quantityButtonText}>-</Text>
+              <Text style={styles.quantityButtonText}>-</Text>
             </TouchableOpacity>
             
             <Text style={styles.quantityText}>{item.quantity}</Text>
             
             <TouchableOpacity
-                style={styles.quantityButton}
-                onPress={() => updateQuantity(index, item.quantity + 1)}
+              style={styles.quantityButton}
+              onPress={() => updateItemQuantity(product.masp!, item.quantity + 1)}
             >
-                <Text style={styles.quantityButtonText}>+</Text>
+              <Text style={styles.quantityButtonText}>+</Text>
             </TouchableOpacity>
-            </View>
-            
-            <TouchableOpacity
+          </View>
+          
+          <TouchableOpacity
             style={styles.removeButton}
-            onPress={() => removeItem(index)}
-            >
+            onPress={() => handleRemoveItem(product.masp!)}
+          >
             <Text style={styles.removeButtonText}>🗑️</Text>
-            </TouchableOpacity>
+          </TouchableOpacity>
         </View>
-        </View>
+      </View>
     );
+  };
 
-    const renderCartItemS = () =>{
-        if(cartItems.length === 0) {
-            <View>
-                <Text>🛒</Text>
-                <Text>Giỏ hàng trống</Text>
-                <Text>Bạn chưa có sản phẩm nào</Text>
-                <Button
-                    title="tiếp tục mua hàng đi"
-                    onPress={onBack}
-                    variant="primary"
-                    size="medium"
-                />
-            </View>
-        }
-        return (
-            <ScrollView showsHorizontalScrollIndicator={false}>
-                {cartItems.map((item, index)=> renderCartItem(item, index))}
-            </ScrollView>
-        )
-        
-    };
-   
-    return(
-        <SafeAreaView>
-            {renderHeader()}
-            {renderCartItemS()}
-        </SafeAreaView>
-    )
-}
+  const renderEmptyCart = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyIcon}>🛒</Text>
+      <Text style={styles.emptyTitle}>Giỏ hàng trống</Text>
+      <Text style={styles.emptyText}>Bạn chưa có sản phẩm nào trong giỏ hàng</Text>
+      <Button
+        title="Tiếp tục mua sắm"
+        onPress={onBack}
+        variant="primary"
+        style={styles.continueShoppingButton}
+      />
+    </View>
+  );
+
+  const renderCartItems = () => (
+    <ScrollView 
+      style={styles.cartItemsContainer}
+      showsVerticalScrollIndicator={false}
+    >
+      {cartItems.map((item, index) => renderCartItem(item, index))}
+    </ScrollView>
+  );
+
+  const renderCheckoutBar = () => (
+    <View style={styles.checkoutBar}>
+      <View style={styles.totalContainer}>
+        <Text style={styles.totalText}>Tổng cộng:</Text>
+        <Text style={styles.totalPrice}>
+          {new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+          }).format(totalPrice)}
+        </Text>
+      </View>
+      <Button
+        title={`Thanh toán (${totalItems})`}
+        onPress={onCheckout}
+        variant="primary"
+        fullWidth
+        disabled={cartItems.length === 0}
+      />
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {renderHeader()}
+      {cartItems.length === 0 ? renderEmptyCart() : renderCartItems()}
+      {cartItems.length > 0 && renderCheckoutBar()}
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
   },
-  
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Sizes.screenPadding,
-    paddingVertical: Sizes.md,
-    backgroundColor: Colors.surface,
+    padding: Sizes.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    backgroundColor: Colors.white,
   },
-  
   backButton: {
     padding: Sizes.sm,
   },
-  
   backIcon: {
     fontSize: Sizes.iconLg,
     color: Colors.textPrimary,
   },
-  
   headerTitle: {
     fontSize: Sizes.fontSizeLg,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: Colors.textPrimary,
   },
-  
   clearButton: {
-    padding: Sizes.sm,
-  },
-  
-  clearButtonText: {
-    fontSize: Sizes.fontSizeSm,
     color: Colors.error,
-    fontWeight: '600',
+    fontSize: Sizes.fontSizeSm,
   },
-  
-  content: {
+  emptyContainer: {
     flex: 1,
-    paddingHorizontal: Sizes.screenPadding,
-    paddingTop: Sizes.md,
-  },
-  
-  emptyCart: {
-    flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Sizes.screenPadding,
+    alignItems: 'center',
+    padding: Sizes.xl,
   },
-  
-  emptyCartIcon: {
-    fontSize: Sizes.iconXxl * 2,
-    marginBottom: Sizes.lg,
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: Sizes.md,
   },
-  
-  emptyCartTitle: {
+  emptyTitle: {
     fontSize: Sizes.fontSizeXl,
-    fontWeight: '700',
+    fontWeight: 'bold',
+    marginBottom: Sizes.xs,
     color: Colors.textPrimary,
-    marginBottom: Sizes.sm,
-    textAlign: 'center',
   },
-  
-  emptyCartSubtitle: {
+  emptyText: {
     fontSize: Sizes.fontSizeMd,
     color: Colors.textSecondary,
     textAlign: 'center',
-    marginBottom: Sizes.lg,
-    lineHeight: Sizes.lineHeightMd,
+    marginBottom: Sizes.xl,
   },
-  
   continueShoppingButton: {
-    marginBottom: Sizes.md,
+    width: '100%',
   },
-  
+  cartItemsContainer: {
+    flex: 1,
+    padding: Sizes.md,
+  },
   cartItem: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
-    borderRadius: Sizes.radiusMd,
+    backgroundColor: Colors.white,
+    borderRadius: Sizes.sm,
     padding: Sizes.md,
     marginBottom: Sizes.md,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  
   itemImage: {
     width: 80,
     height: 80,
-    borderRadius: Sizes.radiusSm,
+    borderRadius: Sizes.sm,
     marginRight: Sizes.md,
   },
-  
   itemInfo: {
     flex: 1,
-    marginRight: Sizes.sm,
   },
-  
-  itemBrand: {
-    fontSize: Sizes.fontSizeXs,
-    color: Colors.primary,
-    fontWeight: '600',
-    marginBottom: Sizes.xs,
-  },
-  
   itemName: {
-    fontSize: Sizes.fontSizeSm,
-    fontWeight: '600',
+    fontSize: Sizes.fontSizeMd,
     color: Colors.textPrimary,
     marginBottom: Sizes.xs,
-    lineHeight: Sizes.lineHeightSm,
   },
-  
   itemOptions: {
     marginBottom: Sizes.xs,
   },
-  
   itemOption: {
-    fontSize: Sizes.fontSizeXs,
-    color: Colors.textSecondary,
-    marginBottom: 2,
-  },
-  
-  itemPrice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  
-  currentPrice: {
-    fontSize: Sizes.fontSizeMd,
-    fontWeight: '700',
-    color: Colors.primary,
-    marginRight: Sizes.xs,
-  },
-  
-  originalPrice: {
     fontSize: Sizes.fontSizeSm,
     color: Colors.textSecondary,
-    textDecorationLine: 'line-through',
   },
-  
+  itemPrice: {
+    fontSize: Sizes.fontSizeMd,
+    fontWeight: 'bold',
+    color: Colors.primary,
+  },
   itemActions: {
-    alignItems: 'flex-end',
+    flexDirection: 'column',
     justifyContent: 'space-between',
+    alignItems: 'flex-end',
   },
-  
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.grayLight,
-    borderRadius: Sizes.radiusSm,
-    paddingHorizontal: Sizes.xs,
-    marginBottom: Sizes.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Sizes.sm,
+    overflow: 'hidden',
   },
-  
   quantityButton: {
-    width: 28,
-    height: 28,
-    borderRadius: Sizes.radiusSm,
-    backgroundColor: Colors.white,
+    padding: Sizes.xs,
+    minWidth: 32,
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: Colors.background,
   },
-  
   quantityButtonText: {
-    fontSize: Sizes.fontSizeSm,
-    fontWeight: '600',
+    fontSize: Sizes.fontSizeLg,
     color: Colors.textPrimary,
   },
-  
   quantityText: {
-    fontSize: Sizes.fontSizeSm,
-    fontWeight: '600',
+    paddingHorizontal: Sizes.sm,
+    fontSize: Sizes.fontSizeMd,
     color: Colors.textPrimary,
-    marginHorizontal: Sizes.sm,
-    minWidth: 20,
+    minWidth: 24,
     textAlign: 'center',
   },
-  
   removeButton: {
     padding: Sizes.xs,
   },
-  
   removeButtonText: {
     fontSize: Sizes.iconMd,
   },
-  
-  orderSummary: {
-    backgroundColor: Colors.surface,
-    padding: Sizes.screenPadding,
+  checkoutBar: {
+    padding: Sizes.md,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
+    backgroundColor: Colors.white,
   },
-  
-  summaryTitle: {
-    fontSize: Sizes.fontSizeLg,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-    marginBottom: Sizes.md,
-  },
-  
-  summaryRow: {
+  totalContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Sizes.sm,
+    marginBottom: Sizes.md,
   },
-  
-  summaryLabel: {
-    fontSize: Sizes.fontSizeMd,
-    color: Colors.textSecondary,
-  },
-  
-  summaryValue: {
-    fontSize: Sizes.fontSizeMd,
-    fontWeight: '600',
+  totalText: {
+    fontSize: Sizes.fontSizeLg,
+    fontWeight: 'bold',
     color: Colors.textPrimary,
   },
-  
-  discountValue: {
-    color: Colors.success,
-  },
-  
-  totalValue: {
+  totalPrice: {
     fontSize: Sizes.fontSizeLg,
+    fontWeight: 'bold',
     color: Colors.primary,
   },
-  
-  summaryDivider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginVertical: Sizes.md,
-  },
-  
-  actionButtons: {
-    padding: Sizes.screenPadding,
-    backgroundColor: Colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  
-  checkoutButton: {
-    marginBottom: Sizes.sm,
-  },
 });
+
+export default CartScreen;

@@ -58,6 +58,11 @@ const don_hangController = {
     don_hang.insert(data, (result) => res.send(result));
   },
 
+  insertorder : (req, res) => {
+    const data = req.body;
+    don_hang.insertOrder(data, (result) => res.send(result));
+  },
+
   update: (req, res) => {
     const data = req.body;
     const id = req.params.id;

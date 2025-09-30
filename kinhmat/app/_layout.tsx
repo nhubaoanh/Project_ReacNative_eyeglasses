@@ -3,12 +3,14 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import  {CartProvider}  from '../src/context/CartContext';
 
 export default function RootLayout() {
-  
   return (
-    <Stack>
-        <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-    </Stack>
+    <CartProvider>
+      <Stack>
+          <Stack.Screen name="(drawers)" options={{ headerShown: false, title:'' }} />
+      </Stack>
+    </CartProvider>
   );
 }

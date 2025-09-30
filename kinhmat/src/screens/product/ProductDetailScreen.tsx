@@ -1,24 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, SafeAreaView } from 'react-native';
-import { Colors } from '../../../constants/colors';
-import { Sizes } from '../../../constants/sizes';
-import { Button } from '../../components/ui/Button';
-import { Product, ProductColor, ProductStorage } from '../../lib/types/product.types';
-import apiService, { Product as ApiProduct } from '../../service/apiService';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+  SafeAreaView,
+} from "react-native";
+import { Colors } from "../../../constants/colors";
+import { Sizes } from "../../../constants/sizes";
+import { useCart } from "../../context/CartContext";
+import apiService, { Product as ApiProduct } from "../../service/apiService";
+import productService from "@/src/service/product.Service";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 interface ProductDetailScreenProps {
   productId?: number;
 }
 
-const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ productId }) => {
-  const [selectedColor, setSelectedColor] = useState<string>('');
-  const [selectedStorage, setSelectedStorage] = useState<string>('');
+
+// truyền cái id của sản phẩm vào đây và để zen dữ liệu ra
+const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
+  productId,
+}) => {
+  const [selectedColor, setSelectedColor] = useState<string>("");
+  const [selectedSize, setSelectedSize] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<ApiProduct | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { addToCart } = useCart();
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Fetch product data from API
   useEffect(() => {
@@ -27,58 +42,70 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ productId }) 
     }
   }, [productId]);
 
+  // lấy các sản phẩm lên
   const fetchProduct = async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await apiService.getProductById(productId || 0);
-      
+
+      // const response = await apiService.getProductById(productId || 0);
+      const response = await productService.getProductById(productId || 0);
+
       if (response.success && response.data) {
         setProduct(response.data);
-        console.log('Product data:', response.data);
+        console.log("Product data:", response.data);
       } else {
-        setError('Không thể tải thông tin sản phẩm');
+        setError("Không thể tải thông tin sản phẩm");
       }
     } catch (err) {
-      console.error('Error fetching product:', err);
-      setError('Không thể kết nối đến server');
+      console.error("Error fetching product:", err);
+      setError("Không thể kết nối đến server");
     } finally {
       setLoading(false);
     }
   };
 
+  // lấy dữ liệu nhét vô addToCart chuyển xuống cartContext
   const handleAddToCart = () => {
-    // TODO: Implement add to cart functionality
-    console.log('Add to cart:', product?.masp, quantity);
+    if (!product) return;
+
+    const color = selectedColor || product.mausac || "Mặc định";
+    const size = selectedSize || product.kichthuoc || "Mặc định";
+
+    addToCart(product, quantity, color, size);
+
+    // Show success message
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
   };
 
   const handleBuyNow = () => {
-    // TODO: Implement buy now functionality
-    console.log('Buy now:', product?.masp, quantity);
+    handleAddToCart();
+    // Navigate to cart screen
+    // navigation.navigate('Cart');
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(price);
   };
 
   const renderImageGallery = () => {
     const getImageSource = () => {
       if (!product?.hinhanh) {
-        return { uri: 'https://via.placeholder.com/300x400?text=No+Image' };
+        return { uri: "https://via.placeholder.com/300x400?text=No+Image" };
       }
-      
+
       const imageUrl = apiService.getImageUrl(product.hinhanh);
       return { uri: imageUrl };
     };
 
     return (
       <View style={styles.imageGallery}>
-        <Image 
-          source={getImageSource()} 
+        <Image
+          source={getImageSource()}
           style={styles.mainImage}
           resizeMode="contain"
         />
@@ -89,24 +116,29 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ productId }) 
 
   const renderProductInfo = () => (
     <View style={styles.productInfo}>
-      <Text style={styles.brand}>{product?.thuonghieu || 'Thương hiệu'}</Text>
-      <Text style={styles.name}>{product?.tensp || 'Tên sản phẩm'}</Text>
-      
+      <Text style={styles.brand}>{product?.thuonghieu || "Thương hiệu"}</Text>
+      <Text style={styles.name}>{product?.tensp || "Tên sản phẩm"}</Text>
+
       <View style={styles.ratingContainer}>
         <Text style={styles.rating}>⭐ 4.5</Text>
         <Text style={styles.reviewCount}>(0 đánh giá)</Text>
       </View>
 
       <View style={styles.priceContainer}>
-        <Text style={styles.currentPrice}>{formatPrice(product?.gia || 0)}</Text>
+        <Text style={styles.currentPrice}>
+          {formatPrice(product?.gia || 0)}
+        </Text>
         {/* Có thể thêm giá gốc và discount sau */}
       </View>
 
       <Text style={styles.description}>
-        Màu sắc: {product?.mausac || 'N/A'}{'\n'}
-        Kiểu dáng: {product?.kieudang || 'N/A'}{'\n'}
-        Kích thước: {product?.kichthuoc || 'N/A'}{'\n'}
-        Chất liệu: {product?.chatlieu || 'N/A'}
+        Màu sắc: {product?.mausac || "N/A"}
+        {"\n"}
+        Kiểu dáng: {product?.kieudang || "N/A"}
+        {"\n"}
+        Kích thước: {product?.kichthuoc || "N/A"}
+        {"\n"}
+        Chất liệu: {product?.chatlieu || "N/A"}
       </Text>
     </View>
   );
@@ -118,30 +150,33 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ productId }) 
         <TouchableOpacity
           style={[
             styles.colorOption,
-            selectedColor === product?.mausac && styles.colorOptionSelected
+            selectedColor === (product?.mausac || "") &&
+              styles.colorOptionSelected,
           ]}
-          onPress={() => setSelectedColor(product?.mausac || '')}
+          onPress={() => setSelectedColor(product?.mausac || "")}
         >
-          <View style={[styles.colorCircle, { backgroundColor: '#007AFF' }]} />
-          <Text style={styles.colorName}>{product?.mausac || 'Mặc định'}</Text>
+          <View style={[styles.colorCircle, { backgroundColor: "#007AFF" }]} />
+          <Text style={styles.colorName}>{product?.mausac || "Mặc định"}</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 
-  const renderStorageSelection = () => (
+  const renderSizeSelection = () => (
     <View style={styles.selectionSection}>
       <Text style={styles.sectionTitle}>Kích thước</Text>
       <View style={styles.storageOptions}>
         <TouchableOpacity
           style={[
             styles.storageOption,
-            selectedStorage === product?.kichthuoc && styles.storageOptionSelected
+            selectedSize === (product?.kichthuoc || "") &&
+              styles.storageOptionSelected,
           ]}
-          onPress={() => setSelectedStorage(product?.kichthuoc || '')}
+          onPress={() => setSelectedSize(product?.kichthuoc || "")}
         >
-          <Text style={styles.storageCapacity}>{product?.kichthuoc || 'Mặc định'}</Text>
-          <Text style={styles.storagePrice}>{formatPrice(product?.gia || 0)}</Text>
+          <Text style={styles.storageCapacity}>
+            {product?.kichthuoc || "Mặc định"}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -174,80 +209,49 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ productId }) 
       <View style={styles.specificationsList}>
         <View style={styles.specificationItem}>
           <Text style={styles.specificationKey}>Mã sản phẩm</Text>
-          <Text style={styles.specificationValue}>{product?.masp || 'N/A'}</Text>
+          <Text style={styles.specificationValue}>
+            {product?.masp || "N/A"}
+          </Text>
         </View>
         <View style={styles.specificationItem}>
           <Text style={styles.specificationKey}>Thương hiệu</Text>
-          <Text style={styles.specificationValue}>{product?.thuonghieu || 'N/A'}</Text>
+          <Text style={styles.specificationValue}>
+            {product?.thuonghieu || "N/A"}
+          </Text>
         </View>
         <View style={styles.specificationItem}>
           <Text style={styles.specificationKey}>Màu sắc</Text>
-          <Text style={styles.specificationValue}>{product?.mausac || 'N/A'}</Text>
+          <Text style={styles.specificationValue}>
+            {product?.mausac || "N/A"}
+          </Text>
         </View>
         <View style={styles.specificationItem}>
           <Text style={styles.specificationKey}>Kiểu dáng</Text>
-          <Text style={styles.specificationValue}>{product?.kieudang || 'N/A'}</Text>
+          <Text style={styles.specificationValue}>
+            {product?.kieudang || "N/A"}
+          </Text>
         </View>
         <View style={styles.specificationItem}>
           <Text style={styles.specificationKey}>Kích thước</Text>
-          <Text style={styles.specificationValue}>{product?.kichthuoc || 'N/A'}</Text>
+          <Text style={styles.specificationValue}>
+            {product?.kichthuoc || "N/A"}
+          </Text>
         </View>
         <View style={styles.specificationItem}>
           <Text style={styles.specificationKey}>Chất liệu</Text>
-          <Text style={styles.specificationValue}>{product?.chatlieu || 'N/A'}</Text>
+          <Text style={styles.specificationValue}>
+            {product?.chatlieu || "N/A"}
+          </Text>
         </View>
         <View style={styles.specificationItem}>
           <Text style={styles.specificationKey}>Mã loại</Text>
-          <Text style={styles.specificationValue}>{product?.maloai || 'N/A'}</Text>
+          <Text style={styles.specificationValue}>
+            {product?.maloai || "N/A"}
+          </Text>
         </View>
       </View>
     </View>
   );
-
-  const renderActionButtons = () => (
-    <View style={styles.actionButtons}>
-      <Button
-        title="Thêm vào giỏ hàng"
-        onPress={handleAddToCart}
-        variant="outline"
-        fullWidth
-        style={styles.addToCartButton}
-      />
-      <Button
-        title="Mua ngay"
-        onPress={handleBuyNow}
-        variant="primary"
-        fullWidth
-        style={styles.buyNowButton}
-      />
-    </View>
-  );
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Đang tải thông tin sản phẩm...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (error || !product) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error || 'Không tìm thấy sản phẩm'}</Text>
-          <Button
-            title="Thử lại"
-            onPress={fetchProduct}
-            variant="primary"
-            style={styles.retryButton}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -255,11 +259,32 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ productId }) 
         {renderImageGallery()}
         {renderProductInfo()}
         {renderColorSelection()}
-        {renderStorageSelection()}
+        {renderSizeSelection()}
         {renderQuantitySelector()}
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.button, styles.addToCartButton]}
+            onPress={handleAddToCart}
+          >
+            <Text style={styles.buttonText}>Thêm vào giỏ hàng</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.buyNowButton]}
+            onPress={handleBuyNow}
+          >
+            <Text style={[styles.buttonText, styles.buyNowButtonText]}>
+              Mua ngay
+            </Text>
+          </TouchableOpacity>
+        </View>
+        {showSuccess && (
+          <View style={styles.successMessage}>
+            <Text style={styles.successText}>Đã thêm vào giỏ hàng!</Text>
+          </View>
+        )}
         {renderSpecifications()}
       </ScrollView>
-      {renderActionButtons()}
     </SafeAreaView>
   );
 };
@@ -276,20 +301,7 @@ const styles = StyleSheet.create({
   mainImage: {
     width: width,
     height: width * 0.8,
-    resizeMode: 'contain',
-  },
-  thumbnailContainer: {
-    paddingHorizontal: Sizes.md,
-  },
-  thumbnailWrapper: {
-    marginRight: Sizes.sm,
-  },
-  thumbnail: {
-    width: 60,
-    height: 60,
-    borderRadius: Sizes.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    resizeMode: "contain",
   },
   productInfo: {
     backgroundColor: Colors.white,
@@ -299,18 +311,18 @@ const styles = StyleSheet.create({
   brand: {
     fontSize: 16,
     color: Colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: Sizes.xs,
   },
   name: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.textPrimary,
     marginBottom: Sizes.sm,
   },
   ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: Sizes.sm,
   },
   rating: {
@@ -323,32 +335,15 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   priceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: Sizes.md,
   },
   currentPrice: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.primary,
     marginRight: Sizes.sm,
-  },
-  originalPrice: {
-    fontSize: 18,
-    color: Colors.textSecondary,
-    textDecorationLine: 'line-through',
-    marginRight: Sizes.sm,
-  },
-  discountBadge: {
-    backgroundColor: Colors.error,
-    paddingHorizontal: Sizes.sm,
-    paddingVertical: Sizes.xs,
-    borderRadius: Sizes.sm,
-  },
-  discountText: {
-    color: Colors.white,
-    fontSize: 12,
-    fontWeight: 'bold',
   },
   description: {
     fontSize: 16,
@@ -362,17 +357,17 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: Colors.textPrimary,
     marginBottom: Sizes.md,
   },
   colorOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
   colorOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginRight: Sizes.md,
     marginBottom: Sizes.sm,
     padding: Sizes.sm,
@@ -382,7 +377,7 @@ const styles = StyleSheet.create({
   },
   colorOptionSelected: {
     borderColor: Colors.primary,
-    backgroundColor: Colors.primary + '10',
+    backgroundColor: Colors.primary + "10",
   },
   colorCircle: {
     width: 20,
@@ -395,8 +390,8 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   storageOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
   storageOption: {
     padding: Sizes.sm,
@@ -405,22 +400,18 @@ const styles = StyleSheet.create({
     borderRadius: Sizes.sm,
     borderWidth: 1,
     borderColor: Colors.border,
-    alignItems: 'center',
+    alignItems: "center",
     minWidth: 80,
   },
   storageOptionSelected: {
     borderColor: Colors.primary,
-    backgroundColor: Colors.primary + '10',
+    backgroundColor: Colors.primary + "10",
   },
   storageCapacity: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: Colors.textPrimary,
     marginBottom: Sizes.xs,
-  },
-  storagePrice: {
-    fontSize: 12,
-    color: Colors.textSecondary,
   },
   quantitySection: {
     backgroundColor: Colors.white,
@@ -428,29 +419,29 @@ const styles = StyleSheet.create({
     marginBottom: Sizes.sm,
   },
   quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   quantityButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: Colors.grayLight,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   quantityButtonText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Colors.textPrimary,
   },
   quantityText: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: Colors.textPrimary,
     marginHorizontal: Sizes.lg,
     minWidth: 30,
-    textAlign: 'center',
+    textAlign: "center",
   },
   specificationsSection: {
     backgroundColor: Colors.white,
@@ -461,8 +452,8 @@ const styles = StyleSheet.create({
     gap: Sizes.sm,
   },
   specificationItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: Sizes.xs,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
@@ -475,48 +466,46 @@ const styles = StyleSheet.create({
   specificationValue: {
     fontSize: 14,
     color: Colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: "500",
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   actionButtons: {
-    backgroundColor: Colors.white,
+    flexDirection: "row",
     padding: Sizes.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    gap: Sizes.md,
+  },
+  button: {
+    flex: 1,
+    padding: Sizes.md,
+    borderRadius: Sizes.sm,
+    alignItems: "center",
+    justifyContent: "center",
   },
   addToCartButton: {
-    marginBottom: Sizes.sm,
+    backgroundColor: Colors.primary,
   },
   buyNowButton: {
-    marginBottom: Sizes.sm,
+    backgroundColor: Colors.secondary,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
+  buttonText: {
+    color: Colors.white,
+    fontWeight: "bold",
+    fontSize: Sizes.fontSizeMd,
   },
-  loadingText: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-    textAlign: 'center',
+  buyNowButtonText: {
+    color: Colors.textPrimary,
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
-    padding: Sizes.lg,
+  successMessage: {
+    backgroundColor: Colors.successLight,
+    margin: Sizes.md,
+    padding: Sizes.md,
+    borderRadius: Sizes.sm,
+    alignItems: "center",
   },
-  errorText: {
-    fontSize: 16,
-    color: Colors.error,
-    textAlign: 'center',
-    marginBottom: Sizes.lg,
-  },
-  retryButton: {
-    minWidth: 120,
+  successText: {
+    color: Colors.success,
+    fontWeight: "bold",
   },
 });
 

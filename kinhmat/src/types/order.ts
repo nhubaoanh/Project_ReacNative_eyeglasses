@@ -1,0 +1,19 @@
+interface OrderItem {
+  masp: number;
+  soluong: number;
+  dongia: number; // giữ string vì backend trả string
+}
+
+interface Order {
+  madh: number;
+  makh: number;
+  ngaydat: string;
+  tongtien: number;
+  matrangthai: number;
+  diachi_giao: string;
+  mapt?: number;
+  items: OrderItem[];
+  phuongthuc: string;
+}
+
+export { Order, OrderItem };

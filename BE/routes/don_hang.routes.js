@@ -6,6 +6,7 @@ import db from '../common/db.js';
 router.get('/', don_hangController.getAll);
 router.get('/:id', don_hangController.getById);
 router.post('/', don_hangController.insert);
+router.post('/create', don_hangController.insertorder);
 router.put('/:id', don_hangController.update);
 router.delete('/:id', don_hangController.delete);
 

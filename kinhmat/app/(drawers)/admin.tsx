@@ -1,6 +1,6 @@
-import { uploadToCloudinary } from '@/src/service/cloudinary';
-import * as ImagePicker from 'expo-image-picker';
-import React, { useEffect, useState } from 'react';
+import { uploadToCloudinary } from "@/src/service/cloudinary";
+import * as ImagePicker from "expo-image-picker";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,16 +13,10 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
-} from 'react-native';
-import apiService, { Product } from '../../src/service/apiService';
-
-// Test biến môi trường
-console.log('=== TESTING ENVIRONMENT VARIABLES ===');
-console.log('process.env.EXPO_PUBLIC_URL_API:', process.env.EXPO_PUBLIC_URL_API);
-console.log('process.env.URL_API:', process.env.URL_API);
-console.log('All env vars:', Object.keys(process.env).filter(key => key.includes('URL')));
-console.log('==========================================');
+  View,
+} from "react-native";
+import apiService, { Product } from "../../src/service/apiService";
+import productService from "@/src/service/product.Service";
 
 const AdminScreen: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -32,13 +26,13 @@ const AdminScreen: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
-    tensp: '',
-    thuonghieu: '',
-    gia: '',
-    mausac: '',
-    kieudang: '',
-    kichthuoc: '',
-    chatlieu: ''
+    tensp: "",
+    thuonghieu: "",
+    gia: "",
+    mausac: "",
+    kieudang: "",
+    kichthuoc: "",
+    chatlieu: "",
   });
 
   useEffect(() => {
@@ -48,20 +42,20 @@ const AdminScreen: React.FC = () => {
 
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Lỗi', 'Cần quyền truy cập thư viện ảnh để upload hình!');
+    if (status !== "granted") {
+      Alert.alert("Lỗi", "Cần quyền truy cập thư viện ảnh để upload hình!");
     }
   };
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const result = await apiService.getAllProducts();
+      const result = await productService.getAllProducts();
       if (result.success && result.data) {
         setProducts(result.data);
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error("Error fetching products:", error);
     } finally {
       setLoading(false);
     }
@@ -86,40 +80,50 @@ const AdminScreen: React.FC = () => {
         await uploadImage(productId, result.assets[0].uri);
       }
     } catch (error) {
-      Alert.alert('Lỗi', 'Không thể chọn ảnh');
+      Alert.alert("Lỗi", "Không thể chọn ảnh");
     }
   };
 
   const uploadImage = async (productId: number, imageUri: string) => {
     try {
       setUploading(productId);
-      console.log('Starting upload for product:', productId, 'with image:', imageUri);
-      
+      console.log(
+        "Starting upload for product:",
+        productId,
+        "with image:",
+        imageUri
+      );
+
       // Step 1: Upload to Cloudinary first
-      console.log('Uploading to Cloudinary...');
+      console.log("Uploading to Cloudinary...");
       const cloudinaryResult = await uploadToCloudinary(imageUri);
-      console.log('Cloudinary upload result:', cloudinaryResult);
-      
+      console.log("Cloudinary upload result:", cloudinaryResult);
+
       if (!cloudinaryResult.secure_url) {
-        throw new Error('Failed to get Cloudinary URL');
+        throw new Error("Failed to get Cloudinary URL");
       }
-      
+
       // Step 2: Save Cloudinary URL to database
-      console.log('Saving Cloudinary URL to database:', cloudinaryResult.secure_url);
-      const result = await apiService.updateProductImage(productId, cloudinaryResult.secure_url);
-      
-      console.log('Database update result:', result);
-      
+      console.log(
+        "Saving Cloudinary URL to database:",
+        cloudinaryResult.secure_url
+      );
+      const result = await productService.updateProductImage(productId, {
+        hinhanh: cloudinaryResult.secure_url,
+      } as any);
+
       if (result.success) {
-        Alert.alert('Thành công', 'Cập nhật ảnh sản phẩm thành công!');
+        Alert.alert("Thành công", "Cập nhật ảnh sản phẩm thành công!");
         await fetchProducts(); // Refresh danh sách
       } else {
-        console.error('Database update failed:', result.error);
-        Alert.alert('Lỗi', result.error || 'Không thể cập nhật database');
+        Alert.alert("Lỗi", result.error || "Không thể cập nhật database");
       }
     } catch (error) {
-      console.error('Upload exception:', error);
-      Alert.alert('Lỗi', 'Có lỗi xảy ra khi upload ảnh: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      Alert.alert(
+        "Lỗi",
+        "Có lỗi xảy ra khi upload ảnh: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
     } finally {
       setUploading(null);
     }
@@ -128,13 +132,13 @@ const AdminScreen: React.FC = () => {
   const openEditModal = (product: Product) => {
     setEditingProduct(product);
     setFormData({
-      tensp: product.tensp || '',
-      thuonghieu: product.thuonghieu || '',
-      gia: product.gia?.toString() || '',
-      mausac: product.mausac || '',
-      kieudang: product.kieudang || '',
-      kichthuoc: product.kichthuoc || '',
-      chatlieu: product.chatlieu || ''
+      tensp: product.tensp || "",
+      thuonghieu: product.thuonghieu || "",
+      gia: product.gia?.toString() || "",
+      mausac: product.mausac || "",
+      kieudang: product.kieudang || "",
+      kichthuoc: product.kichthuoc || "",
+      chatlieu: product.chatlieu || "",
     });
     setModalVisible(true);
   };
@@ -151,20 +155,23 @@ const AdminScreen: React.FC = () => {
         mausac: formData.mausac,
         kieudang: formData.kieudang,
         kichthuoc: formData.kichthuoc,
-        chatlieu: formData.chatlieu
+        chatlieu: formData.chatlieu,
       };
 
-      const result = await apiService.updateProduct(editingProduct.masp!, updatedProduct);
-      
+      const result = await productService.updateProduct(
+        editingProduct.masp!,
+        updatedProduct
+      );
+
       if (result.success) {
-        Alert.alert('Thành công', 'Cập nhật sản phẩm thành công!');
+        Alert.alert("Thành công", "Cập nhật sản phẩm thành công!");
         setModalVisible(false);
         await fetchProducts();
       } else {
-        Alert.alert('Lỗi', result.error || 'Không thể cập nhật sản phẩm');
+        Alert.alert("Lỗi", result.error || "Không thể cập nhật sản phẩm");
       }
     } catch (error) {
-      Alert.alert('Lỗi', 'Có lỗi xảy ra khi cập nhật sản phẩm');
+      Alert.alert("Lỗi", "Có lỗi xảy ra khi cập nhật sản phẩm");
     }
   };
 
@@ -172,8 +179,8 @@ const AdminScreen: React.FC = () => {
     <View style={styles.productCard}>
       <View style={styles.imageContainer}>
         {item.hinhanh ? (
-          <Image 
-            source={{ uri: apiService.getImageUrl(item.hinhanh) }} 
+          <Image
+            source={{ uri: apiService.getImageUrl(item.hinhanh) }}
             style={styles.productImage}
             resizeMode="cover"
           />
@@ -182,8 +189,8 @@ const AdminScreen: React.FC = () => {
             <Text style={styles.noImageText}>Chưa có ảnh</Text>
           </View>
         )}
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.uploadButton}
           onPress={() => pickImage(item.masp!)}
           disabled={uploading === item.masp}
@@ -205,8 +212,8 @@ const AdminScreen: React.FC = () => {
         <Text style={styles.productDetails}>
           Màu: {item.mausac} | Kiểu: {item.kieudang}
         </Text>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.editButton}
           onPress={() => openEditModal(item)}
         >
@@ -228,11 +235,13 @@ const AdminScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>🔧 Quản Trị Sản Phẩm</Text>
-      
+
       <FlatList
         data={products}
         renderItem={renderProduct}
-        keyExtractor={(item) => item.masp?.toString() || Math.random().toString()}
+        keyExtractor={(item) =>
+          item.masp?.toString() || Math.random().toString()
+        }
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -251,12 +260,14 @@ const AdminScreen: React.FC = () => {
           <View style={styles.modalContent}>
             <ScrollView>
               <Text style={styles.modalTitle}>Chỉnh sửa sản phẩm</Text>
-              
+
               <Text style={styles.inputLabel}>Tên sản phẩm:</Text>
               <TextInput
                 style={styles.input}
                 value={formData.tensp}
-                onChangeText={(text) => setFormData({...formData, tensp: text})}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, tensp: text })
+                }
                 placeholder="Nhập tên sản phẩm"
               />
 
@@ -264,7 +275,9 @@ const AdminScreen: React.FC = () => {
               <TextInput
                 style={styles.input}
                 value={formData.thuonghieu}
-                onChangeText={(text) => setFormData({...formData, thuonghieu: text})}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, thuonghieu: text })
+                }
                 placeholder="Nhập thương hiệu"
               />
 
@@ -272,7 +285,7 @@ const AdminScreen: React.FC = () => {
               <TextInput
                 style={styles.input}
                 value={formData.gia}
-                onChangeText={(text) => setFormData({...formData, gia: text})}
+                onChangeText={(text) => setFormData({ ...formData, gia: text })}
                 placeholder="Nhập giá"
                 keyboardType="numeric"
               />
@@ -281,7 +294,9 @@ const AdminScreen: React.FC = () => {
               <TextInput
                 style={styles.input}
                 value={formData.mausac}
-                onChangeText={(text) => setFormData({...formData, mausac: text})}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, mausac: text })
+                }
                 placeholder="Nhập màu sắc"
               />
 
@@ -289,7 +304,9 @@ const AdminScreen: React.FC = () => {
               <TextInput
                 style={styles.input}
                 value={formData.kieudang}
-                onChangeText={(text) => setFormData({...formData, kieudang: text})}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, kieudang: text })
+                }
                 placeholder="Nhập kiểu dáng"
               />
 
@@ -297,7 +314,9 @@ const AdminScreen: React.FC = () => {
               <TextInput
                 style={styles.input}
                 value={formData.kichthuoc}
-                onChangeText={(text) => setFormData({...formData, kichthuoc: text})}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, kichthuoc: text })
+                }
                 placeholder="Nhập kích thước"
               />
 
@@ -305,19 +324,21 @@ const AdminScreen: React.FC = () => {
               <TextInput
                 style={styles.input}
                 value={formData.chatlieu}
-                onChangeText={(text) => setFormData({...formData, chatlieu: text})}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, chatlieu: text })
+                }
                 placeholder="Nhập chất liệu"
               />
 
               <View style={styles.modalButtons}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.modalButton, styles.cancelButton]}
                   onPress={() => setModalVisible(false)}
                 >
                   <Text style={styles.cancelButtonText}>Hủy</Text>
                 </TouchableOpacity>
-                
-                <TouchableOpacity 
+
+                <TouchableOpacity
                   style={[styles.modalButton, styles.saveButton]}
                   onPress={saveProduct}
                 >
@@ -335,139 +356,139 @@ const AdminScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginVertical: 20,
-    color: '#333',
+    color: "#333",
   },
   listContainer: {
     padding: 15,
   },
   productCard: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     marginBottom: 15,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   imageContainer: {
-    position: 'relative',
+    position: "relative",
     height: 200,
   },
   productImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   noImageContainer: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
   },
   noImageText: {
-    color: '#999',
+    color: "#999",
     fontSize: 16,
   },
   uploadButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 10,
     right: 10,
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
   },
   uploadButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   productInfo: {
     padding: 15,
   },
   productName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 5,
-    color: '#333',
+    color: "#333",
   },
   productBrand: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 3,
   },
   productPrice: {
     fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '600',
+    color: "#007AFF",
+    fontWeight: "600",
     marginBottom: 5,
   },
   productDetails: {
     fontSize: 12,
-    color: '#888',
+    color: "#888",
     marginBottom: 10,
   },
   editButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: "#28a745",
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 6,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   editButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     margin: 20,
     borderRadius: 12,
     padding: 20,
-    maxHeight: '80%',
-    width: '90%',
+    maxHeight: "80%",
+    width: "90%",
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 20,
-    color: '#333',
+    color: "#333",
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 5,
-    color: '#333',
+    color: "#333",
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -475,8 +496,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 20,
   },
   modalButton: {
@@ -486,22 +507,22 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   cancelButton: {
-    backgroundColor: '#6c757d',
+    backgroundColor: "#6c757d",
   },
   saveButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
   },
   cancelButtonText: {
-    color: 'white',
-    textAlign: 'center',
+    color: "white",
+    textAlign: "center",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   saveButtonText: {
-    color: 'white',
-    textAlign: 'center',
+    color: "white",
+    textAlign: "center",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

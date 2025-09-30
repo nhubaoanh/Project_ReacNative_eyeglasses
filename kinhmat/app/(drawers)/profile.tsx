@@ -1,9 +1,13 @@
 import React from 'react';
 import { ProfileScreen } from '../../src/screens/profile/ProfileScreen';
+import { useRouter } from 'expo-router';
 
 const ProfilePage = () => {
+  const router = useRouter();
+  
   const handleBack = () => {
     // Handle back navigation
+    router.back();
   };
 
   const handleEditProfile = () => {

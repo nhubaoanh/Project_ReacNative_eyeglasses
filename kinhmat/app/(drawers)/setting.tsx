@@ -1,20 +1,13 @@
-import { CartScreen } from "../../src/screens/cart/CartScreen";
+import  CartScreen  from "../../src/screens/cart/CartScreen";
 import { Text, View } from "react-native";
+import { useCart } from '@/src/context/CartContext';
+import { useRouter } from 'expo-router';
+
 
 export default function setting() {
-    const handleBack = () => {
-        // Handle back navigation
-    };
-
-    const handleCheckout = () => {
-        // Handle checkout - navigate to checkout screen
-        console.log('Checkout pressed');
-    };
-
     return (
-        <CartScreen
-            onBack={handleBack}
-            onCheckout={handleCheckout}
-        />
-    );
+        <View>
+            <Text>nhữ bảo anh quá đẹp zai</Text>
+        </View>
+    )
 }

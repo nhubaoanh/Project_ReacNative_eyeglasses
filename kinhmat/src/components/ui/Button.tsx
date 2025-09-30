@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   TouchableOpacity,
   Text,
@@ -6,36 +6,36 @@ import {
   ActivityIndicator,
   ViewStyle,
   TextStyle,
-} from 'react-native';
-import { Colors } from '../../../constants/colors';
-import { Sizes } from '../../../constants/sizes';
+} from "react-native";
+import { Colors } from "../../../constants/colors";
+import { Sizes } from "../../../constants/sizes";
 
 export interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
-  size?: 'small' | 'medium' | 'large';
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+  size?: "small" | "medium" | "large";
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
   icon?: React.ReactNode;
-  iconPosition?: 'left' | 'right';
+  iconPosition?: "left" | "right";
 }
 
 export const Button: React.FC<ButtonProps> = ({
   title,
   onPress,
-  variant = 'primary',
-  size = 'medium',
+  variant = "primary",
+  size = "medium",
   disabled = false,
   loading = false,
   fullWidth = false,
   style,
   textStyle,
   icon,
-  iconPosition = 'left',
+  iconPosition = "left",
 }) => {
   const buttonStyle = [
     styles.base,
@@ -59,16 +59,20 @@ export const Button: React.FC<ButtonProps> = ({
       return (
         <ActivityIndicator
           size="small"
-          color={variant === 'outline' || variant === 'ghost' ? Colors.primary : Colors.white}
+          color={
+            variant === "outline" || variant === "ghost"
+              ? Colors.primary
+              : Colors.white
+          }
         />
       );
     }
 
     return (
       <>
-        {icon && iconPosition === 'left' && icon}
+        {icon && iconPosition === "left" && icon}
         <Text style={textStyles}>{title}</Text>
-        {icon && iconPosition === 'right' && icon}
+        {icon && iconPosition === "right" && icon}
       </>
     );
   };
@@ -87,14 +91,14 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   base: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: Sizes.radiusMd,
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
-  
+
   // Variants
   primary: {
     backgroundColor: Colors.primary,
@@ -105,18 +109,18 @@ const styles = StyleSheet.create({
     borderColor: Colors.secondary,
   },
   outline: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderColor: Colors.primary,
   },
   ghost: {
-    backgroundColor: 'transparent',
-    borderColor: 'transparent',
+    backgroundColor: "transparent",
+    borderColor: "transparent",
   },
   danger: {
     backgroundColor: Colors.error,
     borderColor: Colors.error,
   },
-  
+
   // Sizes
   small: {
     height: Sizes.buttonHeightSm,
@@ -130,21 +134,21 @@ const styles = StyleSheet.create({
     height: Sizes.buttonHeightLg,
     paddingHorizontal: Sizes.xl,
   },
-  
+
   // States
   disabled: {
     opacity: 0.5,
   },
   fullWidth: {
-    width: '100%',
+    width: "100%",
   },
-  
+
   // Text styles
   text: {
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
-  
+
   primaryText: {
     color: Colors.white,
   },
@@ -160,7 +164,7 @@ const styles = StyleSheet.create({
   dangerText: {
     color: Colors.white,
   },
-  
+
   smallText: {
     fontSize: Sizes.fontSizeSm,
   },
@@ -170,7 +174,7 @@ const styles = StyleSheet.create({
   largeText: {
     fontSize: Sizes.fontSizeLg,
   },
-  
+
   disabledText: {
     color: Colors.gray,
   },

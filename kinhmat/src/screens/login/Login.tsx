@@ -1,8 +1,44 @@
 import { Colors } from "@/constants/colors";
 import { Sizes } from "@/constants/sizes";
-import { View, TextInput, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import apiService from "@/src/service/apiService";
+import { router } from "expo-router";
+import { useState } from "react";
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function LoginScreen() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  console.log(email, password);
+
+const handleLogin = async () => {
+  if (!email || !password) {
+    Alert.alert("Vui lòng nhập đầy đủ thông tin");
+    return;
+  }
+
+  try {
+    const res = await apiService.login(email, password);
+    console.log("Login response:", res);
+
+    if (res.success) {
+      // Lấy token đúng theo cấu trúc backend
+      const token = res.data?.token || res.data?.data?.token;
+      Alert.alert("Đăng nhập thành công");
+      console.log("Token:", token);
+
+      // Chuyển trang
+      router.push("/(drawers)");
+    } else {
+      Alert.alert("Đăng nhập không thành công", res.error || "Sai thông tin");
+    }
+  } catch (err) {
+    Alert.alert("Lỗi", "Không thể kết nối đến server");
+    console.log("Login error:", err);
+  }
+};
+
+
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -13,20 +49,22 @@ export default function LoginScreen() {
                 placeholder="Tên đăng nhập"
                 placeholderTextColor={Colors.textSecondary}
                 style={styles.input}
+                onChangeText={(text) => setEmail(text)}
                 />
                 <TextInput
                 placeholder="Mật khẩu"
                 placeholderTextColor={Colors.textSecondary}
                 secureTextEntry
                 style={styles.input}
+                onChangeText={(text) => setPassword(text)}
                 />
 
-            <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Đăng nhập</Text>
+            <TouchableOpacity style={styles.button} onPress={() => handleLogin()}>
+              <Text style={styles.buttonText}>Đăng nhập</Text>
             </TouchableOpacity>
 
             <TouchableOpacity>
-            <Text style={styles.forgotText}>Quên mật khẩu?</Text>
+              <Text style={styles.forgotText}>Quên mật khẩu?</Text>
             </TouchableOpacity>
         </View>
       </ScrollView>
