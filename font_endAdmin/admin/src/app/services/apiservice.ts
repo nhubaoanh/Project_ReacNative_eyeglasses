@@ -70,6 +70,18 @@ class ApiService {
       };
     }
   }
+
+  getImageUrl(imagePath: string): string {
+    if (!imagePath) return "";
+
+    // Nếu đã là full URL thì return luôn
+    if (imagePath.startsWith("http")) {
+      return imagePath;
+    }
+
+    // Nếu là relative path thì tạo full URL
+    return `${this.baseURL.replace("/api", "")}${imagePath}`;
+  }
 }
 
 const apiService = new ApiService();

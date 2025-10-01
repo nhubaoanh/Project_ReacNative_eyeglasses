@@ -18,6 +18,7 @@ import {
   View,
   Image,
 } from "react-native";
+import productService from "@/src/service/product.Service";
 
 const { width } = Dimensions.get("window");
 
@@ -88,7 +89,7 @@ export default function HomeScreen() {
       setLoading(true);
       setError(null);
 
-      const productsRes = await apiService.getAllProducts();
+      const productsRes = await productService.getAllProducts();
       if (productsRes.success && productsRes.data) {
         setProducts(productsRes.data);
       }
@@ -107,9 +108,9 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  const handleCategoryPress = (categoryId: number) => {
-    router.push(`/category/${categoryId}`);
-  };
+  // const handleCategoryPress = (categoryId: number) => {
+  //   router.push(`/category/${categoryId}`);
+  // };
 
   const handleCartPress = () => {
     router.push("/cart");
@@ -249,7 +250,7 @@ export default function HomeScreen() {
                   styles.categoryItem,
                   { backgroundColor: category.color + "20" },
                 ]}
-                onPress={() => handleCategoryPress(category.id)}
+                // onPress={() => handleCategoryPress(category.id)}
               >
                 <Text style={styles.categoryIcon}>{category.icon}</Text>
                 <Text style={[styles.categoryName, { color: category.color }]}>

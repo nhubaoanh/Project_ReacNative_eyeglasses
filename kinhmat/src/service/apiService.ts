@@ -1,5 +1,4 @@
 
-import { Category } from "../types/category";
 import Customer from "../types/customer";
 import { Order, OrderItem } from "../types/order";
 import Product from "../types/product";
@@ -116,79 +115,15 @@ class ApiService {
     }
   }
 
-  // ===== SẢN PHẨM (PRODUCTS) =====
-  async getAllProducts(): Promise<ApiResponse<Product[]>> {
-    return this.makeRequest<Product[]>("/sanpham");
-  }
-
-  async getProductById(id: number): Promise<ApiResponse<Product>> {
-    return this.makeRequest<Product>(`/sanpham/${id}`);
-  }
-
-  async getFeaturedProducts(): Promise<ApiResponse<Product[]>> {
-    return this.makeRequest<Product[]>("/sanpham/kieudang");
-  }
-
   async getProductsByCategory(
     categoryId: number
   ): Promise<ApiResponse<Product[]>> {
     return this.makeRequest<Product[]>(`/sanpham/category/${categoryId}`);
   }
 
-  async createProduct(productData: Product): Promise<ApiResponse<Product>> {
-    return this.makeRequest<Product>("/sanpham", {
-      method: "POST",
-      body: JSON.stringify(productData),
-    });
-  }
-
-  async updateProduct(
-    id: number,
-    productData: Product & { imageBase64?: string }
-  ): Promise<ApiResponse<Product>> {
-    return this.makeRequest<Product>(`/sanpham/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(productData),
-    });
-  }
-
-  async deleteProduct(id: number): Promise<ApiResponse<any>> {
-    return this.makeRequest(`/sanpham/${id}`, {
-      method: "DELETE",
-    });
-  }
 
   // ===== DANH MỤC (CATEGORIES) =====
-  async getAllCategories(): Promise<ApiResponse<Category[]>> {
-    return this.makeRequest<Category[]>("/danhmuc");
-  }
-
-  async getCategoryById(id: number): Promise<ApiResponse<Category>> {
-    return this.makeRequest<Category>(`/danhmuc/${id}`);
-  }
-
-  async createCategory(categoryData: Category): Promise<ApiResponse<Category>> {
-    return this.makeRequest<Category>("/danhmuc", {
-      method: "POST",
-      body: JSON.stringify(categoryData),
-    });
-  }
-
-  async updateCategory(
-    id: number,
-    categoryData: Category
-  ): Promise<ApiResponse<Category>> {
-    return this.makeRequest<Category>(`/danhmuc/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(categoryData),
-    });
-  }
-
-  async deleteCategory(id: number): Promise<ApiResponse<any>> {
-    return this.makeRequest(`/danhmuc/${id}`, {
-      method: "DELETE",
-    });
-  }
+  
 
   // ===== KHÁCH HÀNG (CUSTOMERS) =====
   async getAllCustomers(): Promise<ApiResponse<Customer[]>> {
@@ -312,5 +247,5 @@ const apiService = new ApiService();
 export default apiService;
 
 // Export types for use in other files
-export type { ApiResponse, Category, Customer, Order, Product, Supplier };
+export type { ApiResponse, Customer, Order, Product, Supplier };
 

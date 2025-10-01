@@ -1,184 +1,142 @@
 "use client";
-import React, { useState } from "react";
-import { Space, Table, Tag, Button, Modal, Form, Input, message } from "antd";
+import React, { useEffect, useState } from "react";
+import { Alert, Button, message } from "antd";
+import { ProductTable } from "./components/productTable";
+import { ProductModal } from "./components/productModal";
+import  Product  from "@/app/types/product";
+import productService from "../services/product.service";
+import apiService from "../services/apiservice";
 
-const { Column, ColumnGroup } = Table;
+// const initialData: Product[] = [
+//   {
+//     STT: 1,
+//     productId: 101,
+//     name: "Áo Thun Nam",
+//     categoryId: 1,
+//     brand: "Nike",
+//     img: "https://via.placeholder.com/100",
+//     price: 250000,
+//     color: "Trắng",
+//     tyle: "Thể thao",
+//     size: "M",
+//     material: "Cotton",
+//     status: "active",
+//   },
+//   {
+//     STT: 2,
+//     productId: 102,
+//     name: "Quần Jean",
+//     categoryId: 2,
+//     brand: "Levi's",
+//     img: "https://via.placeholder.com/100",
+//     price: 600000,
+//     color: "Xanh",
+//     tyle: "Casual",
+//     size: "32",
+//     material: "Jean",
+//     status: "inactive",
+//   },
+// ];
 
-interface DataType {
-  key: React.Key;
-  firstName: string;
-  lastName: string;
-  age: number;
-  address: string;
-  tags: string[];
-}
 
-const initialData: DataType[] = [
-  {
-    key: "1",
-    firstName: "John",
-    lastName: "Brown",
-    age: 32,
-    address: "New York No. 1 Lake Park",
-    tags: ["nice", "developer"],
-  },
-  {
-    key: "2",
-    firstName: "Jim",
-    lastName: "Green",
-    age: 42,
-    address: "London No. 1 Lake Park",
-    tags: ["loser"],
-  },
-  {
-    key: "3",
-    firstName: "Joe",
-    lastName: "Black",
-    age: 32,
-    address: "Sydney No. 1 Lake Park",
-    tags: ["cool", "teacher"],
-  },
-];
 
-const Products: React.FC = () => {
-  const [data, setData] = useState<DataType[]>(initialData);
+const ProductsPage: React.FC = () => {
+  const [data, setData] = useState<Product[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<DataType | null>(null);
-  const [form] = Form.useForm();
+  const [editingRecord, setEditingRecord] = useState<Product | null>(null);
 
-  const handleEdit = (record: DataType) => {
-    setEditingRecord(record);
-    form.setFieldsValue(record);
-    setIsModalOpen(true);
-  };
+  useEffect(() => {
+    fetchdata();
+  }, [data])
+
+const fetchdata = async () => {
+  try {
+    const res = await productService.getAllProducts();
+
+    const mappedData: Product[] = (res.data ?? []).map((item: any, index: number) => ({
+      STT: index + 1,
+      masp: item.masp,
+      tensp: item.tensp,
+      maloai: item.maLoai,
+      thuonghieu: item.thuonghieu,
+      hinhanh: apiService.getImageUrl(item.hinhanh),
+      gia: item.gia,
+      mausac: item.mausac,
+      kieudang: item.kieudang,
+      kichthuoc: item.kichthuoc,
+      chatlieu: item.chatlieu,
+    }));
+
+    setData(mappedData);
+    console.log("du lieu" ,data)
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+
+
 
   const handleAdd = () => {
     setEditingRecord(null);
-    form.resetFields();
     setIsModalOpen(true);
   };
 
-  const handleDelete = (record: DataType) => {
-    setData((prev) => prev.filter((item) => item.key !== record.key));
-    message.success("Đã xóa thành công");
+  const handleEdit = (product: Product) => {
+    setEditingRecord(product);
+    setIsModalOpen(true);
   };
 
-  const handleSave = () => {
-    form.validateFields().then((values) => {
-      if (editingRecord) {
-        // cập nhật
-        setData((prev) =>
-          prev.map((item) =>
-            item.key === editingRecord.key ? { ...item, ...values } : item
-          )
-        );
-        message.success("Cập nhật thành công");
-      } else {
-        // thêm mới
-        const newRecord: DataType = {
-          key: Date.now().toString(),
-          ...values,
-          tags: values.tags ? values.tags.split(",") : [],
-        };
-        setData((prev) => [...prev, newRecord]);
-        message.success("Thêm mới thành công");
-      }
-      setIsModalOpen(false);
-    });
+  const handleDelete = (product: Product) => {
+    setData((prev) =>
+      prev.filter((item) => item.masp !== product.masp)
+    );
+    message.success("Đã xóa sản phẩm");
+  };
+
+  const handleSave = (values: Product) => {
+    if (editingRecord) {
+      setData((prev) =>
+        prev.map((item) =>
+          item.masp === editingRecord.masp
+            ? { ...item, ...values }
+            : item
+        )
+      );
+      message.success("Cập nhật thành công");
+    } 
+    
+    // else {
+    //   const newProduct: Product = {
+    //     ...values,
+    //     masp: Date.now(),
+    //     status: "active",
+    //   };
+    //   setData((prev) => [...prev, newProduct]);
+    //   message.success("Thêm mới thành công");
+    // }
+    setIsModalOpen(false);
   };
 
   return (
-    <div>
+    <div className="scrollbar">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Quản lý Users</h1>
+        <h1 className="text-xl font-bold">Quản lý sản phẩm</h1>
         <Button type="primary" onClick={handleAdd}>
-          Thêm mới
+          Thêm sản phẩm
         </Button>
       </div>
 
-      <Table<DataType> dataSource={data} rowKey="key" bordered>
-        <ColumnGroup title="Name">
-          <Column title="First Name" dataIndex="firstName" key="firstName" />
-          <Column title="Last Name" dataIndex="lastName" key="lastName" />
-        </ColumnGroup>
-        <Column title="Age" dataIndex="age" key="age" />
-        <Column title="Address" dataIndex="address" key="address" />
-        <Column
-          title="Tags"
-          dataIndex="tags"
-          key="tags"
-          render={(tags: string[]) => (
-            <>
-              {tags.map((tag) => {
-                let color = tag.length > 5 ? "geekblue" : "green";
-                if (tag === "loser") {
-                  color = "volcano";
-                }
-                return (
-                  <Tag color={color} key={tag}>
-                    {tag.toUpperCase()}
-                  </Tag>
-                );
-              })}
-            </>
-          )}
-        />
-        <Column
-          title="Action"
-          key="action"
-          render={(_: any, record: DataType) => (
-            <Space size="middle">
-              <a onClick={() => handleEdit(record)}>Edit</a>
-              <a onClick={() => handleDelete(record)}>Delete</a>
-            </Space>
-          )}
-        />
-      </Table>
+      <ProductTable data={data} onEdit={handleEdit} onDelete={handleDelete} />
 
-      <Modal
-        title={editingRecord ? "Cập nhật User" : "Thêm User mới"}
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        onOk={handleSave}
-        okText={editingRecord ? "Cập nhật" : "Thêm mới"}
-        cancelText="Hủy"
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            label="First Name"
-            name="firstName"
-            rules={[{ required: true, message: "Nhập First Name" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Last Name"
-            name="lastName"
-            rules={[{ required: true, message: "Nhập Last Name" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Age"
-            name="age"
-            rules={[{ required: true, message: "Nhập Age" }]}
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item
-            label="Address"
-            name="address"
-            rules={[{ required: true, message: "Nhập Address" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item label="Tags" name="tags">
-            <Input placeholder="Nhập tags, cách nhau bằng dấu phẩy" />
-          </Form.Item>
-        </Form>
-      </Modal>
+      <ProductModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        product={editingRecord}
+        onSave={handleSave}
+      />
     </div>
   );
 };
 
-export default Products;
+export default ProductsPage;

@@ -1,12 +1,13 @@
 "use client";
 import { Table, Tag, Button, Space } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import  Product  from "@/app/types/product";
 
 interface ProductTableProps {
-  data: any[]; // Replace with your product type
+  data: Product[];
   loading?: boolean;
-  onEdit: (product: any) => void;
-  onDelete: (product: any) => void;
+  onEdit: (product: Product) => void;
+  onDelete: (product: Product) => void;
 }
 
 export const ProductTable = ({
@@ -16,23 +17,27 @@ export const ProductTable = ({
   onDelete,
 }: ProductTableProps) => {
   const columns = [
-    {
-      title: "STT",
-      dataIndex: "id",
-      key: "id",
-      width: 50,
-    },
-    {
-      title: "Tên sản phẩm",
-      dataIndex: "name",
-      key: "name",
-    },
+    { title: "STT", dataIndex: "STT", key: "STT", width: 60 },
+    { title: "Tên sản phẩm", dataIndex: "tensp", key: "tensp" },
+    { title: "Thương hiệu", dataIndex: "thuonghieu", key: "thuonghieu" },
     {
       title: "Giá",
-      dataIndex: "price",
-      key: "price",
+      dataIndex: "gia",
+      key: "gia",
       render: (price: number) => (
         <span>{new Intl.NumberFormat("vi-VN").format(price)} đ</span>
+      ),
+    },
+    { title: "Màu sắc", dataIndex: "mausac", key: "mausac" },
+    { title: "Kiểu dáng", dataIndex: "kieudang", key: "kieudang" },
+    { title: "Kích thước", dataIndex: "kichthuoc", key: "kichthuoc" },
+    { title: "Chất liệu", dataIndex: "chatlieu", key: "chatlieu" },
+    {
+      title: "Hình ảnh",
+      dataIndex: "hinhanh",
+      key: "hinhanh",
+      render: (url: string) => (
+        <img src={url} alt="product" className="w-12 h-12 object-cover" />
       ),
     },
     {
@@ -48,9 +53,8 @@ export const ProductTable = ({
     {
       title: "Hành động",
       key: "action",
-      width: 120,
-      render: (_: any, record: any) => (
-        <Space size="middle">
+      render: (_: any, record: Product) => (
+        <Space>
           <Button
             type="text"
             icon={<EditOutlined />}
@@ -72,8 +76,9 @@ export const ProductTable = ({
       columns={columns}
       dataSource={data}
       loading={loading}
-      rowKey="id"
+      rowKey="masp"
       pagination={{ pageSize: 10 }}
+      scroll={{ y: 420 }}
     />
   );
 };

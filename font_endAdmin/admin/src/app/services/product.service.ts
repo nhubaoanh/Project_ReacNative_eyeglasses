@@ -17,13 +17,6 @@ class ProductService {
     return apiService.makeRequest<Product[]>("/sanpham/featured");
   }
 
-  // Lấy sản phẩm theo danh mục
-  async getProductsByCategory(
-    categoryId: number
-  ): Promise<ApiResponse<Product[]>> {
-    return apiService.makeRequest<Product[]>(`/sanpham/category/${categoryId}`);
-  }
-
   // Tạo sản phẩm mới
   async createProduct(productData: Product): Promise<ApiResponse<Product[]>> {
     return apiService.makeRequest<Product[]>("/sanpham", {
@@ -77,6 +70,10 @@ class ProductService {
       },
     });
   }
+
+  // getImageUrl(imagePath: string): string {
+  //   return apiService.getImageUrl(imagePath);
+  // }
 }
 
 // Export singleton instance
