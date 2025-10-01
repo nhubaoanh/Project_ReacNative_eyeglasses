@@ -18,7 +18,6 @@ interface DataType {
   tyle: string; // kieudang
   size: string; // kichthuoc
   material: string; // chatlieu
-  tags: string[]; // ✅ thêm tags để match với render
 }
 
 const Users: React.FC = () => {
@@ -46,7 +45,6 @@ const Users: React.FC = () => {
         tyle: p.kieudang,
         size: p.kichthuoc,
         material: p.chatlieu,
-        tags: [p.thuonghieu, p.mausac].filter(Boolean) as string[], // ví dụ tự tạo tags
       }));
 
       setItems(mapped);
@@ -56,7 +54,7 @@ const Users: React.FC = () => {
   };
 
   return (
-    <Table<DataType> dataSource={items} rowKey="productId">
+    <Table<DataType> dataSource={items} rowKey="productId" scroll={{x : "max-content", y: 400}}>
       <Column title="STT" dataIndex="STT" key="STT" />
       <Column title="productId" dataIndex="productId" key="productId" />
       <Column title="Name" dataIndex="name" key="name" />
@@ -71,9 +69,9 @@ const Users: React.FC = () => {
       <Column
         title="Action"
         key="action"
-        render={(_: any, record: DataType) => (
+        render={(_: any) => (
           <Space size="middle">
-            <a>Edit {record.name}</a>
+            <a>Edit</a>
             <a>Delete</a>
           </Space>
         )}
