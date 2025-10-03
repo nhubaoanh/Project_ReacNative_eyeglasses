@@ -106,45 +106,45 @@ const san_phamController = {
 //   }
 // },
 update: (req, res) => {
-    try {
-      const id = req.params.id;
-      const data = { ...req.body };
+  try {
+    const id = req.params.id;
+    const data = { ...req.body };
 
-      console.log("=== BACKEND UPDATE ===");
-      console.log("Product ID:", id);
-      console.log("Data received:", data);
+    console.log("=== BACKEND UPDATE ===");
+    console.log("Product ID:", id);
+    console.log("Data received:", data);
 
-      const updateData = {
-        tensp: data.tensp,
-        thuonghieu: data.thuonghieu,
-        gia: data.gia,
-        mausac: data.mausac,
-        kieudang: data.kieudang,
-        kichthuoc: data.kichthuoc,
-        chatlieu: data.chatlieu,
-        mota: data.mota,
-        tonkho: data.tonkho,
-        hinhanh: data.hinhanh, // giờ chỉ nhận URL từ frontend
-      };
-      console.log("Data saved to DB:", updateData);
+    // Chỉ xóa những field undefined, vẫn giữ "" hoặc URL
+    const updateData = {
+      tensp: data.tensp,
+      thuonghieu: data.thuonghieu,
+      gia: data.gia,
+      mausac: data.mausac,
+      kieudang: data.kieudang,
+      kichthuoc: data.kichthuoc,
+      chatlieu: data.chatlieu,
+      mota: data.mota,
+      tonkho: data.tonkho,
+      hinhanh: data.hinhanh || "", // nếu frontend gửi URL, vẫn dùng URL
+    };
 
+    Object.keys(updateData).forEach((key) => {
+      if (updateData[key] === undefined) delete updateData[key];
+    });
 
-      Object.keys(updateData).forEach((key) => {
-        if (updateData[key] === undefined) delete updateData[key];
+    san_pham.update(updateData, id, (result) => {
+      return res.json({
+        success: true,
+        message: result,
+        hinhanh: updateData.hinhanh,
       });
-
-      san_pham.update(updateData, id, (result) => {
-        return res.json({
-          success: true,
-          message: result,
-          hinhanh: data.hinhanh || null,
-        });
-      });
-    } catch (err) {
-      console.error("Update product error:", err);
-      res.status(500).json({ success: false, error: "Internal server error" });
-    }
-  },
+    });
+  } catch (err) {
+    console.error("Update product error:", err);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+}
+,
 
 
   delete: (req, res) => {

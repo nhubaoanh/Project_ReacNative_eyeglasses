@@ -29,9 +29,12 @@ class ProductService {
   async updateProduct(
     id: number,
     productData: Product
-  ): Promise<ApiResponse<Product[]>> {
-    return apiService.makeRequest<Product[]>(`/sanpham/${id}`, {
+  ): Promise<ApiResponse<Product>> {
+    return apiService.makeRequest<Product>(`/sanpham/${id}`, {
       method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(productData),
     });
   }
@@ -50,30 +53,19 @@ class ProductService {
     );
   }
 
-  // Cập nhật hình ảnh sản phẩm
   async updateProductImage(
     id: number,
-    imageUri: string
-  ): Promise<ApiResponse<Product[]>> {
-    const formData = new FormData();
-    formData.append("image", {
-      uri: imageUri,
-      type: "image/jpeg", // hoặc lấy từ file
-      name: "product-image.jpg",
-    } as any);
-
-    return apiService.makeRequest<Product[]>(`/sanpham/${id}/image`, {
+    imageUrl: string
+  ): Promise<ApiResponse<Product>> {
+    return apiService.makeRequest<Product>(`/sanpham/${id}/image`, {
       method: "POST",
-      body: formData,
       headers: {
-        "Content-Type": "multipart/form-data",
+        "Content-Type": "application/json", // JSON đúng kiểu
       },
+      body: JSON.stringify({ hinhanh: imageUrl }),
     });
   }
 
-  // getImageUrl(imagePath: string): string {
-  //   return apiService.getImageUrl(imagePath);
-  // }
 }
 
 // Export singleton instance

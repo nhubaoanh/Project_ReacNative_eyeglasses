@@ -1,5 +1,5 @@
 interface Product {
-  masp?: number; // Mã sản phẩm
+  masp: number; // Mã sản phẩm
   tensp: string; // Tên sản phẩm
   maloai: number; // Mã loại
   thuonghieu: string; // Thương hiệu

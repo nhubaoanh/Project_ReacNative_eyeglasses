@@ -6,39 +6,8 @@ import { ProductModal } from "./components/productModal";
 import  Product  from "@/app/types/product";
 import productService from "../services/product.service";
 import apiService from "../services/apiservice";
-
-// const initialData: Product[] = [
-//   {
-//     STT: 1,
-//     productId: 101,
-//     name: "Áo Thun Nam",
-//     categoryId: 1,
-//     brand: "Nike",
-//     img: "https://via.placeholder.com/100",
-//     price: 250000,
-//     color: "Trắng",
-//     tyle: "Thể thao",
-//     size: "M",
-//     material: "Cotton",
-//     status: "active",
-//   },
-//   {
-//     STT: 2,
-//     productId: 102,
-//     name: "Quần Jean",
-//     categoryId: 2,
-//     brand: "Levi's",
-//     img: "https://via.placeholder.com/100",
-//     price: 600000,
-//     color: "Xanh",
-//     tyle: "Casual",
-//     size: "32",
-//     material: "Jean",
-//     status: "inactive",
-//   },
-// ];
-
-
+import { UploadFile } from "antd";
+import { uploadToCloudinary } from "../utils/cloudinary";
 
 const ProductsPage: React.FC = () => {
   const [data, setData] = useState<Product[]>([]);
@@ -47,35 +16,37 @@ const ProductsPage: React.FC = () => {
 
   useEffect(() => {
     fetchdata();
-  }, [data])
+  }, []);
 
-const fetchdata = async () => {
-  try {
-    const res = await productService.getAllProducts();
+  const fetchdata = async () => {
+    try {
+      const res = await productService.getAllProducts();
 
-    const mappedData: Product[] = (res.data ?? []).map((item: any, index: number) => ({
-      STT: index + 1,
-      masp: item.masp,
-      tensp: item.tensp,
-      maloai: item.maLoai,
-      thuonghieu: item.thuonghieu,
-      hinhanh: apiService.getImageUrl(item.hinhanh),
-      gia: item.gia,
-      mausac: item.mausac,
-      kieudang: item.kieudang,
-      kichthuoc: item.kichthuoc,
-      chatlieu: item.chatlieu,
-    }));
+      const mappedData: Product[] = (res.data ?? []).map(
+        (item: any, index: number) => ({
+          STT: index + 1,
+          masp: item.masp,
+          tensp: item.tensp,
+          maloai: item.maLoai,
+          thuonghieu: item.thuonghieu,
+          hinhanh:
+            typeof item.hinhanh === "string"
+              ? apiService.getImageUrl(item.hinhanh)
+              : "",
+          gia: item.gia,
+          mausac: item.mausac,
+          kieudang: item.kieudang,
+          kichthuoc: item.kichthuoc,
+          chatlieu: item.chatlieu,
+        })
+      );
 
-    setData(mappedData);
-    console.log("du lieu" ,data)
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-
-
+      setData(mappedData);
+      console.log("du lieu", data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -88,35 +59,40 @@ const fetchdata = async () => {
   };
 
   const handleDelete = (product: Product) => {
-    setData((prev) =>
-      prev.filter((item) => item.masp !== product.masp)
-    );
+    setData((prev) => prev.filter((item) => item.masp !== product.masp));
     message.success("Đã xóa sản phẩm");
   };
 
-  const handleSave = (values: Product) => {
-    if (editingRecord) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.masp === editingRecord.masp
-            ? { ...item, ...values }
-            : item
-        )
-      );
-      message.success("Cập nhật thành công");
-    } 
-    
-    // else {
-    //   const newProduct: Product = {
-    //     ...values,
-    //     masp: Date.now(),
-    //     status: "active",
-    //   };
-    //   setData((prev) => [...prev, newProduct]);
-    //   message.success("Thêm mới thành công");
-    // }
+const handleSave = async (values: Product, file?: File) => {
+  try {
+    let imageUrl = values.hinhanh as string;
+
+    // upload file lên Cloudinary nếu có
+    if (file) {
+      imageUrl = await uploadToCloudinary(file);
+    }
+
+    const productData: Product = { ...values, hinhanh: imageUrl };
+    console.log("productData to save:", productData);
+
+    if (values.masp) {
+      // gửi JSON chứa URL lên backend
+      const res = await productService.updateProduct(values.masp, productData);
+      console.log(res);
+      message.success("Cập nhật sản phẩm thành công!");
+    } else {
+      await productService.createProduct(productData);
+      message.success("Thêm sản phẩm mới thành công!");
+    }
+
+    fetchdata();
     setIsModalOpen(false);
-  };
+  } catch (err) {
+    console.error(err);
+    message.error("Có lỗi khi lưu sản phẩm");
+  }
+};
+
 
   return (
     <div className="scrollbar">

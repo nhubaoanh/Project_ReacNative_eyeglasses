@@ -1,12 +1,14 @@
 "use client";
+
 import { Button, Col, Form, Input, Row, Typography, Upload } from "antd";
-import  Product  from "@/app/types/product";
+import Product from "@/app/types/product";
+import { useEffect } from "react";
 
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   product?: Product | null;
-  onSave: (values: Product) => void;
+  onSave: (values: Product, file?: File) => void; // 👈 truyền thêm file
   loading?: boolean;
 }
 
@@ -19,9 +21,35 @@ export const ProductModal = ({
 }: ProductModalProps) => {
   const [form] = Form.useForm<Product>();
 
-  const handleSubmit = (values: Product) => {
-    onSave(values);
+  const handleSubmit = (values: any) => {
+    let file: File | undefined;
+    if (values.hinhanh && values.hinhanh.length > 0) {
+      const f = values.hinhanh[0];
+      if (f.originFileObj) file = f.originFileObj; // file mới
+    }
+    onSave(values, file);
   };
+
+  useEffect(() => {
+    if (product) {
+      form.setFieldsValue({
+        ...product,
+        masp: product.masp,
+        hinhanh: product.hinhanh
+          ? [
+              {
+                uid: "-1",
+                name: "image.png",
+                status: "done",
+                url: product.hinhanh,
+              },
+            ]
+          : [],
+      } as any);
+    } else {
+      form.resetFields();
+    }
+  }, [product, form, isOpen]);
 
   return (
     <div
@@ -34,16 +62,21 @@ export const ProductModal = ({
           {product ? "Cập nhật sản phẩm" : "Thêm sản phẩm mới"}
         </Typography.Title>
 
-        <Form
-          form={form}
-          layout="vertical"
-          initialValues={product || {}}
-          onFinish={handleSubmit}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          {/* cái này nhớ phải nhét thêm mã vào không thì khoogn update được */}
           <Row gutter={16}>
+            <Col>
+              <Form.Item
+                name="masp"
+                // rules={[{ required: true }]}
+                style={{ display: "none" }}
+              >
+                <Input type="hidden" />
+              </Form.Item>
+            </Col>
             <Col span={12}>
               <Form.Item
-                name="name"
+                name="tensp"
                 label="Tên sản phẩm"
                 rules={[{ required: true }]}
               >
@@ -51,7 +84,7 @@ export const ProductModal = ({
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="brand" label="Thương hiệu">
+              <Form.Item name="thuonghieu" label="Thương hiệu">
                 <Input placeholder="Nhập thương hiệu" />
               </Form.Item>
             </Col>
@@ -59,12 +92,12 @@ export const ProductModal = ({
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="price" label="Giá" rules={[{ required: true }]}>
+              <Form.Item name="gia" label="Giá" rules={[{ required: true }]}>
                 <Input type="number" placeholder="Nhập giá" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="color" label="Màu sắc">
+              <Form.Item name="mausac" label="Màu sắc">
                 <Input placeholder="Nhập màu sắc" />
               </Form.Item>
             </Col>
@@ -72,12 +105,12 @@ export const ProductModal = ({
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="tyle" label="Kiểu dáng">
+              <Form.Item name="kieudang" label="Kiểu dáng">
                 <Input placeholder="Nhập kiểu dáng" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="size" label="Kích thước">
+              <Form.Item name="kichthuoc" label="Kích thước">
                 <Input placeholder="Nhập kích thước" />
               </Form.Item>
             </Col>
@@ -85,7 +118,7 @@ export const ProductModal = ({
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="material" label="Chất liệu">
+              <Form.Item name="chatlieu" label="Chất liệu">
                 <Input placeholder="Nhập chất liệu" />
               </Form.Item>
             </Col>
@@ -94,17 +127,12 @@ export const ProductModal = ({
                 name="hinhanh"
                 label="Hình ảnh sản phẩm"
                 valuePropName="fileList"
-                getValueFromEvent={(e) => {
-                  if (Array.isArray(e)) return e;
-                  return e?.fileList;
-                }}
-                rules={[{ required: true, message: "Vui lòng chọn hình ảnh!" }]}
+                getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
               >
                 <Upload
-                  name="image"
                   listType="picture-card"
                   maxCount={1}
-                  beforeUpload={() => false} // ⚡ Không upload ngay, chỉ lưu file vào form
+                  beforeUpload={() => false} // ⚡ không upload tự động
                 >
                   <div>
                     <span>Chọn ảnh</span>
