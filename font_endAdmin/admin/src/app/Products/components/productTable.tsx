@@ -42,11 +42,11 @@ export const ProductTable = ({
     },
     {
       title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
-      render: (status: string) => (
-        <Tag color={status === "active" ? "green" : "red"}>
-          {status === "active" ? "Hoạt động" : "Ngừng bán"}
+      dataIndex: "action_flag",
+      key: "action_flag",
+      render: (status: number) => (
+        <Tag color={status === 1 ? "green" : "red"}>
+          {status === 1 ? "Còn hàng" : "Ngừng bán"}
         </Tag>
       ),
     },
@@ -65,6 +65,7 @@ export const ProductTable = ({
             danger
             icon={<DeleteOutlined />}
             onClick={() => onDelete(record)}
+            disabled={record.action_flag === 0} // vô hiệu hóa 
           />
         </Space>
       ),

@@ -3,6 +3,7 @@ import { Sizes } from "@/constants/sizes";
 import apiService from "@/src/service/apiService";
 import { router } from "expo-router";
 import { useState } from "react";
+import { userStorage } from "@/src/utils/userStorage";
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function LoginScreen() {
@@ -10,6 +11,33 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
 
   console.log(email, password);
+
+// const handleLogin = async () => {
+//   if (!email || !password) {
+//     Alert.alert("Vui lòng nhập đầy đủ thông tin");
+//     return;
+//   }
+
+//   try {
+//     const res = await apiService.login(email, password);
+//     console.log("Login response:", res);
+
+//     if (res.success) {
+//       // Lấy token đúng theo cấu trúc backend
+//       const token = res.data?.token || res.data?.data?.token;
+//       Alert.alert("Đăng nhập thành công");
+//       console.log("Token:", token);
+
+//       // Chuyển trang
+//       router.push("/(drawers)");
+//     } else {
+//       Alert.alert("Đăng nhập không thành công", res.error || "Sai thông tin");
+//     }
+//   } catch (err) {
+//     Alert.alert("Lỗi", "Không thể kết nối đến server");
+//     console.log("Login error:", err);
+//   }
+// };
 
 const handleLogin = async () => {
   if (!email || !password) {
@@ -22,12 +50,15 @@ const handleLogin = async () => {
     console.log("Login response:", res);
 
     if (res.success) {
-      // Lấy token đúng theo cấu trúc backend
-      const token = res.data?.token || res.data?.data?.token;
-      Alert.alert("Đăng nhập thành công");
-      console.log("Token:", token);
+      const userId = res.data.user.id;
+      const token = res.data.token;
+      const username = res.data.user.hoten;
 
-      // Chuyển trang
+      await userStorage.addUser(userId, token, username);
+
+      Alert.alert("Đăng nhập thành công");
+      console.log("Đã lưu user:", userId, token, username);
+
       router.push("/(drawers)");
     } else {
       Alert.alert("Đăng nhập không thành công", res.error || "Sai thông tin");

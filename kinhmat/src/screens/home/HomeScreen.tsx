@@ -4,6 +4,7 @@ import { Button } from "../../components/ui/Button";
 import { useCart } from "@/src/context/CartContext";
 import apiService, { Product } from "@/src/service/apiService";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
@@ -19,6 +20,7 @@ import {
   Image,
 } from "react-native";
 import productService from "@/src/service/product.Service";
+import { userStorage } from "@/src/utils/userStorage";
 
 const { width } = Dimensions.get("window");
 
@@ -67,6 +69,7 @@ export default function HomeScreen() {
   const [searchText, setSearchText] = useState("");
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
+const [user, setUser] = useState<{ userId: number; email: string } | null>(null);
   // --- Effect: Auto slide banner ---
   useEffect(() => {
     const interval = setInterval(() => {
@@ -81,8 +84,22 @@ export default function HomeScreen() {
 
   // --- Effect: Lấy dữ liệu ---
   useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const currentUser = await userStorage.getCurrentUser();
+        setUser(currentUser);
+      } catch (err) {
+        console.log("Lỗi khi tải user:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadUser();
     fetchData();
   }, []);
+
+  
+
 
   const fetchData = async () => {
     try {
@@ -176,6 +193,16 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <Text style={styles.textHeader}>Kính Mắt Store</Text>
+          <View style={styles.userBox}>
+            {user ? (
+              <>
+                <Text style={styles.welcome}>Xin chào 👋</Text>
+                <Text style={styles.email}>{user.email}</Text>
+              </>
+            ) : (
+              <Text style={styles.noUser}>Chưa đăng nhập</Text>
+            )}
+          </View>
           <TouchableOpacity style={styles.cartButton} onPress={handleCartPress}>
             <Text style={styles.textIcon}>🛒</Text>
             {totalItems > 0 && (
@@ -328,6 +355,20 @@ export default function HomeScreen() {
 // --- Styles ---
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  welcome: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: Colors.white,
+  },
+  email: {
+    fontSize: 18,
+    color: Colors.white,
+    marginTop: Sizes.sm,
+  },
+  noUser: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+  },
 
   // Header
   header: {
@@ -484,4 +525,10 @@ const styles = StyleSheet.create({
   emptySearchIcon: { fontSize: 48, marginBottom: Sizes.md },
   emptySearchText: { fontSize: 16, marginBottom: Sizes.sm },
   emptySearchSubtext: { fontSize: 14, color: Colors.textSecondary },
+  userBox: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    marginLeft: Sizes.md,
+    flexShrink: 1,
+  },
 });

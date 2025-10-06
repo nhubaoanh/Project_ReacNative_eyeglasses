@@ -1,83 +1,90 @@
 "use client";
+import User from "../types/user"; 
+import { UserTable } from "./components/userTable";
+import { UserModal } from "./components/userModal";
 import React, { useEffect, useState } from "react";
-import { Space, Table, Tag } from "antd";
-import productService from "../services/product.service";
-import Product from "../types/product";
+import userService from "../services/user.service";
+import { Button } from "antd";
 
-const { Column } = Table;
-
-interface DataType {
-  STT: number;
-  productId: number;
-  name: string; // tensp
-  categoryId: number; // maloai
-  brand: string; // thuonghieu
-  img: string; // hinhanh
-  price: number; // gia
-  color: string; // mausac
-  tyle: string; // kieudang
-  size: string; // kichthuoc
-  material: string; // chatlieu
-}
-
-const Users: React.FC = () => {
-  const [items, setItems] = useState<DataType[]>([]);
+const UserPage: React.FC = () => {
+  const [data, setData] = useState<User[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<User | null>(null);
 
   useEffect(() => {
-    fetching();
-  }, []);
+    fetchdata();
+  })
 
-  const fetching = async () => {
-    try {
-      const res = await productService.getAllProducts();
-      const products: Product[] = res.data ?? [];
+  const fetchdata = async () => {
+    try{
+      const res = await userService.getAllUsers();
 
-      // map Product -> DataType để Table dùng
-      const mapped = products.map((p, index) => ({
-        STT: index + 1,
-        productId: p.masp ?? index, // fallback nếu masp null
-        name: p.tensp,
-        categoryId: p.maloai,
-        brand: p.thuonghieu,
-        img: p.hinhanh,
-        price: p.gia,
-        color: p.mausac,
-        tyle: p.kieudang,
-        size: p.kichthuoc,
-        material: p.chatlieu,
-      }));
-
-      setItems(mapped);
-    } catch (error) {
-      console.error("Fetch products failed:", error);
+      const map: User[] = (res.data ?? []).map(
+        (item: any, index: number) => ({
+          STT: index + 1,
+          manv: item.manv,
+          hoten: item.hoten,
+          mavt: item.mavt,
+          sdt: item.sdt,
+          email: item.email,
+          lichlv: item.lichlv,
+          matkhau: item.matkhau
+        })
+      );
+      console.log("Dữ liệu:", map);
+      setData(map);
+      console.log("du lieu", data);
+    }catch(err){
+      console.error(err);
     }
+  }
+
+  const handleAdd = () => {
+    setEditingRecord(null);
+    setIsModalOpen(true);
   };
 
+  const handleEdit = (user: User) => {
+    setEditingRecord(user);
+    setIsModalOpen(true);
+  };
+
+  // const handSave = async (values: User) => {
+  //   try {
+  //     if (values.manv) {
+  //       await userService.updateUser(values.manv, values);
+  //       message.success("Cập nhật người dùng thành công!");
+  //     } else {
+  //       await userService.createUser(values);
+  //       message.success("Thêm người dùng thành công!");
+  //     }
+  //     fetchdata();
+  //     setIsModalOpen(false);
+  //   }catch (err) {
+  //     console.error(err);
+  //     message.error("Lỗi khi cập nhật người dùng!");
+  //   }
+  // }
   return (
-    <Table<DataType> dataSource={items} rowKey="productId" scroll={{x : "max-content", y: 400}}>
-      <Column title="STT" dataIndex="STT" key="STT" />
-      <Column title="productId" dataIndex="productId" key="productId" />
-      <Column title="Name" dataIndex="name" key="name" />
-      <Column title="categoryId" dataIndex="categoryId" key="categoryId" />
-      <Column title="brand" dataIndex="brand" key="brand" />
-      <Column title="color" dataIndex="color" key="color" />
-      <Column title="tyle" dataIndex="tyle" key="tyle" />
-      <Column title="size" dataIndex="size" key="size" />
-      <Column title="material" dataIndex="material" key="material" />
-      <Column title="Price" dataIndex="price" key="price" />
-      <Column title="CategoryId" dataIndex="categoryId" key="categoryId" />
-      <Column
-        title="Action"
-        key="action"
-        render={(_: any) => (
-          <Space size="middle">
-            <a>Edit</a>
-            <a>Delete</a>
-          </Space>
-        )}
+    <div className="scrollbar">
+      <div className="flex justify-between item-center mb-4">
+        <h1 className="text-xl font-bold">Quan ly nguoi dung</h1>
+        <Button type="primary" onClick={handleAdd}>
+          Them nguoi dung
+        </Button>
+      </div>
+
+      <UserTable data={data} onEdit={handleEdit} onDelete={handleEdit}/>
+
+      <UserModal 
+        isOpen={isModalOpen} 
+        onClose = {() => setIsModalOpen(false)}
+        user={editingRecord}
+        onSave={() => fetchdata()
+        }
       />
-    </Table>
-  );
+    </div>
+  )
 };
 
-export default Users;
+export default UserPage;

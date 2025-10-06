@@ -79,8 +79,40 @@ class ApiService {
     return this.makeRequest("/health");
   }
 
-
   // ===== ĐĂNG NHẬP (LOGIN) =====
+  // async login(email: string, matkhau: string): Promise<ApiResponse<any>> {
+  //   try {
+  //     const response = await fetch(`${this.baseURL}/vaitro/login`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ email, matkhau }),
+  //     });
+
+  //     const text = await response.text();
+
+  //     if (!response.ok) {
+  //       try {
+  //         const errJson = JSON.parse(text);
+  //         return {
+  //           success: false,
+  //           error: errJson?.error || `HTTP ${response.status}`,
+  //         };
+  //       } catch {
+  //         return { success: false, error: `HTTP ${response.status}` };
+  //       }
+  //     }
+
+  //     const data = text ? JSON.parse(text) : undefined;
+  //     return { success: true, data };
+  //   } catch (error) {
+  //     return {
+  //       success: false,
+  //       error: error instanceof Error ? error.message : "Unknown error",
+  //     };
+  //   }
+  // }
   async login(email: string, matkhau: string): Promise<ApiResponse<any>> {
     try {
       const response = await fetch(`${this.baseURL}/vaitro/login`, {
@@ -91,26 +123,38 @@ class ApiService {
         body: JSON.stringify({ email, matkhau }),
       });
 
-      const text = await response.text();
-
       if (!response.ok) {
-        try {
-          const errJson = JSON.parse(text);
-          return {
-            success: false,
-            error: errJson?.error || `HTTP ${response.status}`,
-          };
-        } catch {
-          return { success: false, error: `HTTP ${response.status}` };
-        }
+        const errJson = await response.json().catch(() => null);
+        return {
+          success: false,
+          error: errJson?.message || `HTTP ${response.status}`,
+        };
       }
 
-      const data = text ? JSON.parse(text) : undefined;
-      return { success: true, data };
+      const data = await response.json();
+
+      // ✅ Kiểm tra đúng cấu trúc backend bạn gửi
+      if (data.success && data.data?.user && data.data?.token) {
+        return {
+          success: true,
+          data: {
+            user: data.data.user,
+            token: data.data.token,
+          },
+        };
+      } else {
+        return {
+          success: false,
+          error: data.message || "Sai email hoặc mật khẩu",
+        };
+      }
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Không thể kết nối đến server",
       };
     }
   }
@@ -121,9 +165,7 @@ class ApiService {
     return this.makeRequest<Product[]>(`/sanpham/category/${categoryId}`);
   }
 
-
   // ===== DANH MỤC (CATEGORIES) =====
-  
 
   // ===== KHÁCH HÀNG (CUSTOMERS) =====
   async getAllCustomers(): Promise<ApiResponse<Customer[]>> {

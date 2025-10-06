@@ -31,40 +31,79 @@ san_pham.getAll = (callback) => {
   });
 };
 
-san_pham.insert = (san_pham, callback) => {
+// san_pham.insert = (san_pham, callback) => {
+//   const sqlString = "INSERT INTO san_pham SET ?";
+//   db.query(sqlString, san_pham, (err, res) => {
+//     if (err) return callback(err);
+//     callback({ id: res.insertId, ... {san_pham} });
+//   });
+// };
+san_pham.insert = (data, callback) => {
   const sqlString = "INSERT INTO san_pham SET ?";
-  db.query(sqlString, san_pham, (err, res) => {
-    if (err) return callback(err);
-    callback({ id: res.insertId, ... {san_pham} });
+  db.query(sqlString, data, (err, res) => {
+    if (err) {
+      console.error("❌ SQL Insert Error:", err);
+      return callback(err);
+    }
+
+    console.log("✅ Rows affected:", res.affectedRows);
+    callback({
+      success: res.affectedRows > 0,
+      id: res.insertId,
+      ...data,
+    });
   });
 };
 
+
+
 san_pham.update = (san_pham, id, callback) => {
-  console.log('=== MODEL UPDATE DEBUG ===');
-  console.log('Update data:', san_pham);
-  console.log('Product ID:', id);
-  console.log('hinhanh in data:', san_pham.hinhanh);
+  // console.log('=== MODEL UPDATE DEBUG ===');
+  // console.log('Update data:', san_pham);
+  // console.log('Product ID:', id);
+  // console.log('hinhanh in data:', san_pham.hinhanh);
   
   const sqlString = "UPDATE san_pham SET ? WHERE masp = ?";
-  console.log('SQL query:', sqlString);
+  // console.log('SQL query:', sqlString);
   
   db.query(sqlString, [san_pham, id], (err, res) => {
-    console.log('Database query result:', { err, res });
+    // console.log('Database query result:', { err, res });
     if (err) {
       console.error('Database update error:', err);
       return callback(err);
     }
-    console.log('Rows affected:', res.affectedRows);
-    console.log('=== END MODEL DEBUG ===');
+    // console.log('Rows affected:', res.affectedRows);
+    // console.log('=== END MODEL DEBUG ===');
     callback("Cập nhật thành công");
   });
 };
 
+// san_pham.delete = (id, callback) => {
+//   db.query("DELETE FROM san_pham WHERE masp = ?", [id], (err, res) => {
+//     if (err) return callback(err, null);
+
+//     if (res.affectedRows === 0) {
+//       return callback(null, "Không tìm thấy sản phẩm để xoá");
+//     }
+
+//     console.log("Rows affected:", res.affectedRows);
+//     callback(null, "Xóa thành công");
+//   });
+// };
+
 san_pham.delete = (id, callback) => {
-  db.query("DELETE FROM san_pham WHERE masp = ?", id, (err, res) => {
-    if (err) return callback(err);
-    callback("Xóa thành công");
+  const sql = "CALL DeleteSanPham(?)";
+
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error("Lỗi khi gọi procedure DeleteSanPham:", err);
+      return callback({ message: "Lỗi khi xóa mềm sản phẩm", error: err });
+    }
+
+    console.log("Đã xóa mềm sản phẩm có mã:", id);
+    callback(null, { message: "Xóa mềm sản phẩm thành công", id });
   });
 };
+
 
 export default san_pham;

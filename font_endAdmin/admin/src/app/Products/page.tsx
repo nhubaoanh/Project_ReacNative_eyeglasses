@@ -6,7 +6,6 @@ import { ProductModal } from "./components/productModal";
 import  Product  from "@/app/types/product";
 import productService from "../services/product.service";
 import apiService from "../services/apiservice";
-import { UploadFile } from "antd";
 import { uploadToCloudinary } from "../utils/cloudinary";
 
 const ProductsPage: React.FC = () => {
@@ -38,9 +37,10 @@ const ProductsPage: React.FC = () => {
           kieudang: item.kieudang,
           kichthuoc: item.kichthuoc,
           chatlieu: item.chatlieu,
+          action_flag: item.action_flag
         })
       );
-
+      console.log("Dữ liệu sản phẩm:", mappedData);
       setData(mappedData);
       console.log("du lieu", data);
     } catch (err) {
@@ -58,41 +58,55 @@ const ProductsPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (product: Product) => {
-    setData((prev) => prev.filter((item) => item.masp !== product.masp));
-    message.success("Đã xóa sản phẩm");
+  // ProductsPage.tsx
+  const handleDelete = async (product: Product) => {
+    if (product.masp !== undefined) {
+      try {
+        const res = await productService.deleteProduct(product.masp);
+        // message.success(res?.data?.message || "Đã xoá sản phẩm");
+        console.log("Xoá sản phẩm:", res);
+        await fetchdata();
+      } catch (err) {
+        console.error(err);
+        message.error("Lỗi khi xoá sản phẩm");
+      }
+    }
   };
 
-const handleSave = async (values: Product, file?: File) => {
-  try {
-    let imageUrl = values.hinhanh as string;
+  const handleSave = async (values: Product, file?: File) => {
+    try {
+      let imageUrl = values.hinhanh as string;
 
-    // upload file lên Cloudinary nếu có
-    if (file) {
-      imageUrl = await uploadToCloudinary(file);
+      // upload file lên Cloudinary nếu có
+      if (file) {
+        imageUrl = await uploadToCloudinary(file);
+      }
+
+      const productData: Product = { ...values, hinhanh: imageUrl };
+      console.log("productData to save:", productData);
+
+      if (values.masp) {
+        // gửi JSON chứa URL lên backend
+        const res = await productService.updateProduct(
+          values.masp,
+          productData
+        );
+        console.log(res);
+        message.success("Cập nhật sản phẩm thành công!");
+      } else {
+        const { masp, ...newProductData } = productData;
+        await productService.createProduct(newProductData);
+        message.success("Thêm sản phẩm mới thành công!");
+        console.log("New product:", newProductData);
+      }
+
+      fetchdata();
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      message.error("Có lỗi khi lưu sản phẩm");
     }
-
-    const productData: Product = { ...values, hinhanh: imageUrl };
-    console.log("productData to save:", productData);
-
-    if (values.masp) {
-      // gửi JSON chứa URL lên backend
-      const res = await productService.updateProduct(values.masp, productData);
-      console.log(res);
-      message.success("Cập nhật sản phẩm thành công!");
-    } else {
-      await productService.createProduct(productData);
-      message.success("Thêm sản phẩm mới thành công!");
-    }
-
-    fetchdata();
-    setIsModalOpen(false);
-  } catch (err) {
-    console.error(err);
-    message.error("Có lỗi khi lưu sản phẩm");
-  }
-};
-
+  };
 
   return (
     <div className="scrollbar">

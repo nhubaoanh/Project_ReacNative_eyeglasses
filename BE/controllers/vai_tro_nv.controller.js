@@ -51,7 +51,17 @@ const vai_tro_nvController = {
         { expiresIn: "2h" }
       );
 
-      res.json({ token });
+      res.json({
+        success: true,
+        data: {
+          user: {
+            id: user.manv,
+            manv: user.manv,
+            mavt: user.mavt,
+            hoten: user.hoten
+          }, token
+        }
+      });
     });
   }
 
