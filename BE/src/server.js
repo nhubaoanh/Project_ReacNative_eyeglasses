@@ -40,7 +40,7 @@ app.use("/api/chitietsanpham", chitietsanphamRoutes);
 app.use("/api/hang", hangRoutes);
 app.use("/api/hoadonnhap", hoadonnhapRoutes);
 app.use("/api/khuyenmai", khuyenmaiRoutes);
-app.use("/api/loaisanpham", loaisanphamRoutes);
+app.use("/api/danhmuc", loaisanphamRoutes);
 app.use("/api/vaitro", vaitroRoutes);
 app.use("/api/trangthaidonhang", trangthaidonhangRoutes);
 app.use("/api/orders", donhangRoutes);

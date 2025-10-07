@@ -9,6 +9,7 @@ interface Product {
   kieudang: string; // Kiểu dáng
   kichthuoc: string; // Kích thước
   chatlieu: string; // Chất liệu
+  noibat: number; // Sản phẩm nổi bật
 }
 
 export default Product;

@@ -15,6 +15,8 @@ import QRCode from "react-native-qrcode-svg";
 import apiService from "@/src/service/apiService";
 import { Sizes } from "@/constants/sizes";
 import { Colors } from "@/constants/colors";
+import { useCart } from "@/src/context/CartContext";
+
 
 interface Product {
   masp: number;
@@ -38,6 +40,8 @@ export default function CheckoutScreen() {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
+
+  const { clearCart } = useCart(); // <-- lấy clearCart từ context
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("vi-VN", {
@@ -77,6 +81,7 @@ export default function CheckoutScreen() {
 
       if (response.success) {
         Alert.alert("Thành công", "Đặt hàng thành công!");
+        clearCart();
         router.back();
       } else {
         Alert.alert("Lỗi", response.error || "Không thể đặt hàng.");
