@@ -7,5 +7,6 @@ router.get('/:id', loai_san_phamController.getById);
 router.post('/', loai_san_phamController.insert);
 router.put('/:id', loai_san_phamController.update);
 router.delete('/:id', loai_san_phamController.delete);
+router.get('/loaisanpham/:id', loai_san_phamController.getCategory);
 
 export default router;

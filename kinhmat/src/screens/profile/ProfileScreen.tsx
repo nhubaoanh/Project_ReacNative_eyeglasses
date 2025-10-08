@@ -12,6 +12,8 @@ import {
     View,
 } from 'react-native';
 import { Button } from '../../components/ui/Button';
+import { userStorage } from "@/src/utils/userStorage";
+import { useRouter } from "expo-router";
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -28,6 +30,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onHelp,
   onLogout,
 }) => {
+
+  const router = useRouter();
   // Mock user data
   const [user] = useState({
     name: 'Nguyễn Văn A',
@@ -47,20 +51,24 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     }).format(price);
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Đăng xuất',
-      'Bạn có chắc chắn muốn đăng xuất?',
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Đăng xuất',
-          style: 'destructive',
-          onPress: onLogout,
+  const handleLogout = async () => {
+    Alert.alert("Đăng xuất", "Bạn có chắc muốn đăng xuất?", [
+      { text: "Hủy", style: "cancel" },
+      {
+        text: "Đăng xuất",
+        style: "destructive",
+        onPress: async () => {
+          const currentUser = await userStorage.getCurrentUser();
+          if (currentUser) {
+            await userStorage.logout();
+            console.log("Đăng xuất thanh cong");
+          }
+          router.replace("/login");
         },
-      ]
-    );
+      },
+    ]);
   };
+
 
   const renderHeader = () => (
     <View style={styles.header}>

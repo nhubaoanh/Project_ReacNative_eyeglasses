@@ -19,6 +19,14 @@ loai_san_pham.getAll = (callback) => {
   });
 };
 
+loai_san_pham.getByCategory = (maloai, callback) => {
+  const sql = "CALL GetProductsByCategory(?)";
+  db.query(sql, [maloai], (err, result) => {
+    if(err) return callback(err, null);
+    callback(null, result[0]);
+  })
+}
+
 loai_san_pham.insert = (loai_san_pham, callback) => {
   const sqlString = "INSERT INTO loai_san_pham SET ?";
   db.query(sqlString, loai_san_pham, (err, res) => {

@@ -7,7 +7,7 @@ class CategoryService {
   }
 
   async getCategoryById(id: number): Promise<ApiResponse<Category>> {
-    return apiService.makeRequest<Category>(`/danhmuc/${id}`);
+    return apiService.makeRequest<Category>(`/danhmuc/loaisanpham/${id}`);
   }
 
   async createCategory(categoryData: Category): Promise<ApiResponse<Category>> {

@@ -5,10 +5,15 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { userStorage } from "@/src/utils/userStorage";
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useUser } from "../../context/UserContext"; // path đúng với project của bạn
+
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const { login } = useUser();
+
 
   console.log(email, password);
 
@@ -55,6 +60,8 @@ const handleLogin = async () => {
       const username = res.data.user.hoten;
 
       await userStorage.addUser(userId, token, username);
+
+      login({ userId, username, token });
 
       Alert.alert("Đăng nhập thành công");
       console.log("Đã lưu user:", userId, token, username);

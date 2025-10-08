@@ -5,11 +5,18 @@ import categoryService from "@/src/service/category.service";
 import { userStorage } from "@/src/utils/userStorage";
 import Category from "@/src/types/category";
 import { FlatList } from "react-native";
+import { UserStorageItem } from "@/src/utils/userStorage";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
+
 
 export const useHomeData = () => {
-  const [user, setUser] = useState<{ userId: number; email: string } | null>(
-    null
-  );
+  // const [user, setUser] = useState<{ userId: number; email: string } | null>(
+  //   null
+  // );
+
+  const [user, setUser] = useState<UserStorageItem | null>(null);
+
   const [products, setProducts] = useState<Product[]>([]);
   const [category, setCategory] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,10 +32,19 @@ const bannerRef = useRef<FlatList<any>>(null);
   const fetchUser = async () => {
     try {
       const currentUser = await userStorage.getCurrentUser();
+      console.log("🔹 Current user lấy ra trong Home:", currentUser);
       setUser(currentUser);
     } catch (err) {
       console.error("Lỗi khi tải user:", err);
     }
+
+    // // Kiểm tra lại user mỗi 2 giây
+    // const interval = setInterval(async () => {
+    //   const currentUser = await userStorage.getCurrentUser();
+    //   setUser(currentUser);
+    // }, 2000);
+
+    // return () => clearInterval(interval);
   };
 
   const fetchProducts = async () => {
@@ -75,11 +91,18 @@ const bannerRef = useRef<FlatList<any>>(null);
     setRefreshing(false);
   };
 
-  useEffect(() => {
-    fetchUser();
-    fetchProducts();
-    fetchCategories();
-  }, []);
+  // useEffect(() => {
+  //   fetchUser();
+  //   fetchProducts();
+  //   fetchCategories();
+  // }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchUser();
+      fetchProducts();
+      fetchCategories();
+    }, [])
+  );
 
   return {
     user,

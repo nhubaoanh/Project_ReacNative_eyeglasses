@@ -14,13 +14,14 @@ import { Sizes } from "../../../constants/sizes";
 import { useCart } from "../../context/CartContext";
 import apiService, { Product as ApiProduct } from "../../service/apiService";
 import productService from "@/src/service/product.Service";
+import { useUser } from "../../context/UserContext";
+import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
 interface ProductDetailScreenProps {
   productId?: number;
 }
-
 
 // truyền cái id của sản phẩm vào đây và để zen dữ liệu ra
 const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
@@ -34,6 +35,9 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
   const [error, setError] = useState<string | null>(null);
   const { addToCart } = useCart();
   const [showSuccess, setShowSuccess] = useState(false);
+
+  const { isLoggedIn} = useUser();
+  const router = useRouter();
 
   // Fetch product data from API
   useEffect(() => {
@@ -67,6 +71,11 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
 
   // lấy dữ liệu nhét vô addToCart chuyển xuống cartContext
   const handleAddToCart = () => {
+    if (!isLoggedIn) {
+      alert("Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng");
+      // router.push("/(drawers)/login");
+      return;
+    }
     if (!product) return;
 
     const color = selectedColor || product.mausac || "Mặc định";

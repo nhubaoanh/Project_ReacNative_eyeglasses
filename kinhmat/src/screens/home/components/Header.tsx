@@ -5,7 +5,7 @@ import { Sizes } from "@/constants/sizes";
 import { useRouter } from "expo-router";
 
 interface HeaderProps {
-  user: { userId: number; email: string } | null;
+  user: { userId: number; username?: string; email?: string } | null;
   onLoginPress: () => void;
 }
 
@@ -25,7 +25,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onLoginPress }) => {
         alignItems: "center",
         paddingHorizontal: Sizes.md,
         paddingVertical: Sizes.sm,
-        backgroundColor: Colors.primary,
+        backgroundColor: Colors.huawei,
       }}
     >
       <Text style={{ fontSize: 18, fontWeight: "bold", color: Colors.white }}>
@@ -38,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onLoginPress }) => {
               Xin chào 👋
             </Text>
             <Text style={{ color: Colors.white, fontSize: 14 }}>
-              {user.email}
+              {user.username || user.email}
             </Text>
           </>
         ) : (
