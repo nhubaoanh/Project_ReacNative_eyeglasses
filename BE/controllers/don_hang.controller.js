@@ -26,6 +26,7 @@ const don_hangController = {
             tongtien: row.tongtien,
             matrangthai: row.matrangthai,
             diachi_giao: row.diachi_giao,
+            paymentMethod: row.paymentMethod,
             items: []
           };
           orders.push(orderMap[row.madh]);

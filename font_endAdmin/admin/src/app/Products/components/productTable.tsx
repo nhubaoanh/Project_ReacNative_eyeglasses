@@ -17,7 +17,7 @@ export const ProductTable = ({
   onDelete,
 }: ProductTableProps) => {
   const columns = [
-    { title: "STT", dataIndex: "STT", key: "STT", width: 60 },
+    { title: "STT", dataIndex: "STT", key: "STT" },
     { title: "Tên sản phẩm", dataIndex: "tensp", key: "tensp" },
     { title: "Thương hiệu", dataIndex: "thuonghieu", key: "thuonghieu" },
     {

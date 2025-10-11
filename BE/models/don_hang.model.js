@@ -28,7 +28,7 @@ const don_hang = (don_hang) => {
 (don_hang.getAll = (callback) => {
   db.query(
     `SELECT 
-        dh.madh, dh.makh, dh.ngaydat, dh.tongtien, dh.matrangthai, dh.diachi_giao,
+        dh.madh, dh.makh, dh.ngaydat, dh.tongtien, dh.matrangthai, dh.diachi_giao,dh.paymentMethod,
         ctdh.masp, ctdh.soluong, ctdh.dongia,
         sp.tensp, sp.hinhanh
       FROM don_hang dh

@@ -1,89 +1,102 @@
-"use client"
-import React from 'react';
-import { Space, Table, Tag } from 'antd';
+"use client";
 
-const { Column, ColumnGroup } = Table;
+import { useEffect, useState } from "react";
+import Order from "../types/order";
+import orderService from "../services/order.service";
+import { OrderTable } from "./components/orderTable";
+import { OrderModal } from "./components/orderModal";
 
-interface DataType {
-    STT : number;
-  key: React.Key;
-  firstName: string;
-  lastName: string;
-  age: number;
-  address: string;
-  tags: string[];
+const OrdersPage = () => {
+  const [data, setData] = useState<Order[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<Order | null>(null);
+   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  useEffect(() => {
+    fetchDate();
+  }, []);
+
+  const fetchDate = async () => {
+    try {
+      const res = await orderService.getOrders();
+
+      const mappedData: Order[] = (res ?? []).map(
+        (item: any, index: number) => ({
+          numerical: index + 1,
+          madh: item.madh,
+          makh: item.makh,
+          ngaydat: item.ngaydat,
+          tongtien: item.tongtien,
+          matrangthai: item.matrangthai,
+          diachi_giao: item.diachi_giao,
+          items: item.items,
+          paymentMethod: item.paymentMethod,
+        })
+      );
+      console.log("Dữ liệu:", mappedData);
+      setData(mappedData);
+      console.log("du lieu", data);
+      console.log(res);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // 🔹 Khi click vào một dòng
+  const handleRowClick = (order: Order) => {
+    setSelectedOrder(order);
+  };
+
+  const handleAdd = () => {
+    setEditingRecord(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (order: Order) => {
+    setEditingRecord(order);
+    setIsModalOpen(true);
+  };
+
+  // const handleDelete = (order: Order) => {
+  //   if(order.madh){
+  //     orderService.deleteOrder(order.madh);
+  //     fetchDate()
+  //   }
+  // };
+
+  // const handleSave = (order: Order) => {
+  //   if (order.madh) {
+  //     orderService.updateOrder(order.madh, order);
+  //   } else {
+  //     orderService.createOrder(order);
+  //   }
+  //   setIsModalOpen(false);
+  //   fetchDate();
+  // }
+  return (
+    <div className="scrollbar">
+      <div className="flex justify-content-between items-center mb-4">
+        <h1 className="text-3xl font-bold">Quản lý đơn hàng</h1>
+        <button className="btn btn-primary" onClick={handleAdd}>
+          Thêm đơn hàng
+        </button>
+      </div>
+
+      <OrderTable
+        data={data}
+        loading={false}
+        onEdit={handleEdit}
+        onDelete={handleEdit}
+      />
+      
+      {/* <OrderModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        order={editingRecord}
+        onSave={handleSave}
+      /> */}
+    </div>
+  );
 }
 
-const data: DataType[] = [
-  {
-    STT : 1,
-    key: '1',
-    firstName: 'John',
-    lastName: 'Brown',
-    age: 32,
-    address: 'New York No. 1 Lake Park',
-    tags: ['nice', 'developer'],
-  },
-  {
-    STT : 2,
-    key: '2',
-    firstName: 'Jim',
-    lastName: 'Green',
-    age: 42,
-    address: 'London No. 1 Lake Park',
-    tags: ['loser'],
-  },
-  {
-    STT : 3,
-    key: '3',
-    firstName: 'Joe',
-    lastName: 'Black',
-    age: 32,
-    address: 'Sydney No. 1 Lake Park',
-    tags: ['cool', 'teacher'],
-  },
-];
-
-const Orders: React.FC = () => (
-  <Table<DataType> dataSource={data}>
-    <Column title="STT" dataIndex="STT" key="STT" />
-    <ColumnGroup title="Name">
-      <Column title="First Name" dataIndex="firstName" key="firstName" />
-      <Column title="Last Name" dataIndex="lastName" key="lastName" />
-    </ColumnGroup>
-    <Column title="Age" dataIndex="age" key="age" />
-    <Column title="Address" dataIndex="address" key="address" />
-    <Column
-      title="Tags"
-      dataIndex="tags"
-      key="tags"
-      render={(tags: string[]) => (
-        <>
-          {tags.map((tag) => {
-            let color = tag.length > 5 ? 'geekblue' : 'green';
-            if (tag === 'loser') {
-              color = 'volcano';
-            }
-            return (
-              <Tag color={color} key={tag}>
-                {tag.toUpperCase()}
-              </Tag>
-            );
-          })}
-        </>
-      )}
-    />
-    <Column
-      title="Action"
-      key="action"
-      render={(_: any, record: DataType) => (
-        <Space size="middle">
-          <a>Invite {record.lastName}</a>
-          <a>Delete</a>
-        </Space>
-      )}
-    />
-  </Table>
-);
-
-export default Orders;
+export default OrdersPage
