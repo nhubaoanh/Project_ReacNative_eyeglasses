@@ -4,8 +4,16 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = "SECRET_KEY_ABC"; // nhớ để trong .env
 const vai_tro_nvController = {
+  // getAll: (req, res) => {
+  //   vai_tro_nv.getAll((result) => res.send(result));
+  // },
+
   getAll: (req, res) => {
-    vai_tro_nv.getAll((result) => res.send(result));
+    vai_tro_nv.getAll((result) => {
+      if (result instanceof Error)
+        return res.status(500).json({ message: result.message });
+      res.json({ data: result }); // <<< đây quan trọng
+    });
   },
 
   getById: (req, res) => {
@@ -41,7 +49,7 @@ const vai_tro_nvController = {
         return res.status(401).json({ message: "Sai email hoặc mật khẩu" });
       }
 
-      if (user.matkhau !== matkhau) {
+      if (user.matkhau.trim() !== matkhau.trim()) {
         return res.status(401).json({ message: "Sai email hoặc mật khẩu" });
       }
 
@@ -58,12 +66,12 @@ const vai_tro_nvController = {
             id: user.manv,
             manv: user.manv,
             mavt: user.mavt,
-            hoten: user.hoten
-          }, token
-        }
+            hoten: user.hoten,
+          },
+          token,
+        },
       });
     });
-  }
-
+  },
 };
 export default vai_tro_nvController

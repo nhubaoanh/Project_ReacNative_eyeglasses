@@ -41,6 +41,7 @@ const san_phamController = {
       // Chỉ xóa những field undefined, vẫn giữ "" hoặc URL
       const updateData = {
         tensp: data.tensp,
+        maloai: data.maloai,
         thuonghieu: data.thuonghieu,
         gia: data.gia,
         mausac: data.mausac,
@@ -50,6 +51,7 @@ const san_phamController = {
         mota: data.mota,
         tonkho: data.tonkho,
         hinhanh: data.hinhanh || "", // nếu frontend gửi URL, vẫn dùng URL
+        action_flag: data.action_flag, // giữ nguyên giá trị từ frontend
       };
 
       Object.keys(updateData).forEach((key) => {

@@ -4,7 +4,7 @@ import { UserTable } from "./components/userTable";
 import { UserModal } from "./components/userModal";
 import React, { useEffect, useState } from "react";
 import userService from "../services/user.service";
-import { Button } from "antd";
+import { Button, message } from "antd";
 
 const UserPage: React.FC = () => {
   const [data, setData] = useState<User[]>([]);
@@ -13,7 +13,7 @@ const UserPage: React.FC = () => {
 
   useEffect(() => {
     fetchdata();
-  })
+  }, [])
 
   const fetchdata = async () => {
     try{
@@ -49,22 +49,31 @@ const UserPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // const handSave = async (values: User) => {
-  //   try {
-  //     if (values.manv) {
-  //       await userService.updateUser(values.manv, values);
-  //       message.success("Cập nhật người dùng thành công!");
-  //     } else {
-  //       await userService.createUser(values);
-  //       message.success("Thêm người dùng thành công!");
-  //     }
-  //     fetchdata();
-  //     setIsModalOpen(false);
-  //   }catch (err) {
-  //     console.error(err);
-  //     message.error("Lỗi khi cập nhật người dùng!");
-  //   }
-  // }
+  const handSave = async (values: User) => {
+    try {
+      if (!values) {
+        message.error("Không có dữ liệu người dùng!");
+        console.error("No user data provided");
+        return;
+      }
+      if (values.manv) {
+        await userService.updateUser(values.manv, values);
+        message.success("Cập nhật người dùng thành công!");
+        console.log("Updating user with ID:", values.manv);
+        fetchdata();
+      } else {
+        const res = await userService.createUser(values);
+        message.success("Thêm người dùng thành công!");
+        console.log("Phản hồi khi thêm:", res.data); //
+        console.log("Creating new user");
+        fetchdata();
+      }
+      setIsModalOpen(false);
+    }catch (err) {
+      console.error(err);
+      message.error("Lỗi khi cập nhật người dùng!");
+    }
+  }
   return (
     <div className="scrollbar">
       <div className="flex justify-between item-center mb-4">
@@ -80,8 +89,7 @@ const UserPage: React.FC = () => {
         isOpen={isModalOpen} 
         onClose = {() => setIsModalOpen(false)}
         user={editingRecord}
-        onSave={() => fetchdata()
-        }
+        onSave={handSave}
       />
     </div>
   )

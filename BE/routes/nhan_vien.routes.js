@@ -6,6 +6,6 @@ router.get('/', nhan_vienController.getAll);
 router.get('/:id', nhan_vienController.getById);
 router.post('/', nhan_vienController.insert);
 router.put('/:id', nhan_vienController.update);
-router.delete('/:id', nhan_vienController.delete);
+router.delete('/:manv', nhan_vienController.delete);
 
 export default router;

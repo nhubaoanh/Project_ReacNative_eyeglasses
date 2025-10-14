@@ -58,10 +58,6 @@ san_pham.insert = (data, callback) => {
 
 
 san_pham.update = (san_pham, id, callback) => {
-  // console.log('=== MODEL UPDATE DEBUG ===');
-  // console.log('Update data:', san_pham);
-  // console.log('Product ID:', id);
-  // console.log('hinhanh in data:', san_pham.hinhanh);
   
   const sqlString = "UPDATE san_pham SET ? WHERE masp = ?";
   // console.log('SQL query:', sqlString);
@@ -78,18 +74,7 @@ san_pham.update = (san_pham, id, callback) => {
   });
 };
 
-// san_pham.delete = (id, callback) => {
-//   db.query("DELETE FROM san_pham WHERE masp = ?", [id], (err, res) => {
-//     if (err) return callback(err, null);
 
-//     if (res.affectedRows === 0) {
-//       return callback(null, "Không tìm thấy sản phẩm để xoá");
-//     }
-
-//     console.log("Rows affected:", res.affectedRows);
-//     callback(null, "Xóa thành công");
-//   });
-// };
 
 san_pham.delete = (id, callback) => {
   const sql = "CALL DeleteSanPham(?)";

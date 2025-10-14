@@ -24,7 +24,6 @@ class ApiService {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
 
-    // console.log("=== API REQUEST ===");
     const defaultOptions: RequestInit = {
       headers: {
         "Content-Type": "application/json",

@@ -44,7 +44,7 @@ vai_tro_nv.delete = (id, callback) => {
 
 vai_tro_nv.login = (email, callback) => {
   const sqlString = "SELECT manv, hoten, email, matkhau, mavt FROM nhan_vien WHERE email = ?";
-  db.query(sqlString, email, (err, result) => {
+  db.query(sqlString, [email], (err, result) => {
     if (err) return callback(err);
     callback(null,result[0]);
   })

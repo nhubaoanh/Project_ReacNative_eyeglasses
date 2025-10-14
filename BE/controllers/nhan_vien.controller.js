@@ -7,23 +7,33 @@ const nhan_vienController = {
 
   getById: (req, res) => {
     const id = req.params.id;
-    nhan_vien.getById(id, (result) => res.send(result));
+    nhan_vien.getById(id, (result) => res.json({message: "Lay thanh cong"}, result));
   },
 
   insert: (req, res) => {
     const data = req.body;
-    nhan_vien.insert(data, (result) => res.send(result));
+    nhan_vien.insert(data, (result) => res.json({message: "Them thanh cong"},result));
   },
 
   update: (req, res) => {
     const data = req.body;
     const id = req.params.id;
-    nhan_vien.update(data, id, (result) => res.send(result));
+    nhan_vien.update(data, id, (result) => res.json({message: "Cap nhat thanh cong"},result));
   },
 
   delete: (req, res) => {
-    const id = req.params.id;
-    nhan_vien.delete(id, (result) => res.send(result));
-  }
+    console.log("Controller delete gọi params:", req.params);
+    const manv = parseInt(req.params.manv, 10);
+    if (isNaN(manv)) return res.status(400).json({ message: "Invalid manv" });
+
+    nhan_vien.delete(manv, (err, result) => {
+      if (err) {
+        console.error("Service error:", err);
+        return res.status(500).json({ message: err.message });
+      }
+      console.log("Controller trả về:", result);
+      res.status(200).json(result); // Luôn có data
+    });
+  },
 };
 export default nhan_vienController
