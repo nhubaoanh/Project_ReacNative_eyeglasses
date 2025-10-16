@@ -76,8 +76,9 @@ export default function CheckoutScreen() {
         items: orderItems,
         matrangthai: 1,
         tongtien: tongtien_val,
-        phuongthuc: paymentMethod,
+        paymentMethod: paymentMethod,
       });
+      console.log("Order Response:", response);
 
       if (response.success) {
         Alert.alert("Thành công", "Đặt hàng thành công!");

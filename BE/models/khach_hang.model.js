@@ -50,4 +50,16 @@ khach_hang.delete = (id, callback) => {
   });
 };
 
+khach_hang.checkCustom = (hoten, sdt, diachi, callback) => {
+  const sqlString = "CALL sp_CheckOrCreateCustomer(?, ?, ?)";
+  db.query(sqlString, [hoten, sdt, diachi], (err, result) => {
+    if (err) return callback(err);
+
+    const data = result[0][0];
+    callback(null, data);
+  });
+};
+
+
+
 export default khach_hang;

@@ -7,5 +7,6 @@ router.get('/:id', khach_hangController.getById);
 router.post('/', khach_hangController.insert);
 router.put('/:id', khach_hangController.update);
 router.delete('/:id', khach_hangController.delete);
+router.post('/checkCustom', khach_hangController.checkCustom);
 
 export default router;

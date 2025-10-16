@@ -194,6 +194,12 @@ class ApiService {
     });
   }
 
+  async getMyOrders(makh: number): Promise<Order[]>{
+    return this.makeRequest<Order[]>(`/orders/my-orders/${makh}`, {
+      method: "POST",
+    }).then((res) => res.data ?? []);
+  }
+
   // ===== NHÀ CUNG CẤP (SUPPLIERS) =====
   async getAllSuppliers(): Promise<ApiResponse<Supplier[]>> {
     return this.makeRequest<Supplier[]>("/nhacungcap");

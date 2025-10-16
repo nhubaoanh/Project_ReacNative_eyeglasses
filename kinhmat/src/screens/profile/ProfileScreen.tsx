@@ -14,6 +14,7 @@ import {
 import { Button } from '../../components/ui/Button';
 import { userStorage } from "@/src/utils/userStorage";
 import { useRouter } from "expo-router";
+import apiService from "@/src/service/apiService";
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -30,24 +31,25 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onHelp,
   onLogout,
 }) => {
+  const [myOrder, setMyOrder] = useState<any>([]);
 
   const router = useRouter();
   // Mock user data
   const [user] = useState({
-    name: 'Nguyễn Văn A',
-    email: 'nguyenvana@email.com',
-    phone: '0123456789',
-    avatar: 'https://via.placeholder.com/100x100/007AFF/FFFFFF?text=User',
-    memberSince: '2023',
+    name: "Nguyễn Văn A",
+    email: "nguyenvana@email.com",
+    phone: "0123456789",
+    avatar: "https://via.placeholder.com/100x100/007AFF/FFFFFF?text=User",
+    memberSince: "2023",
     totalOrders: 15,
     totalSpent: 150000000,
     loyaltyPoints: 2500,
   });
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(price);
   };
 
@@ -69,6 +71,55 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     ]);
   };
 
+  // // Trong component
+  const [userId, setUserId] = useState<number | null>(null); // Thêm state cho user ID
+
+  // // Trong fetchUserProfile (từ phản hồi trước, nếu bạn đã thêm)
+  // const fetchUserProfile = async () => {
+  //   try {
+  //     // setLoading(true);
+  //     const currentUser = await userStorage.getCurrentUser(); // Giả sử trả { id, name, ... }
+  //     if (currentUser && currentUser.userId) {
+  //       setUserId(currentUser.userId);
+  //       // // Gọi API profile nếu cần
+  //       // const profileRes = await apiService.get(currentUser.id); // Giả sử có method này
+  //       // setUser(profileRes);
+  //     }
+  //   } catch (err) {
+  //     // setError("Lỗi lấy profile");
+  //     console.error(err);
+  //   // } finally {
+  //   //   // setLoading(false);
+  //   // }
+  // };
+
+  // Sửa handleMyOrder
+  const handleMyOrder = async () => {
+    if (!userId) {
+      Alert.alert("Lỗi", "Chưa có thông tin user");
+      return;
+    }
+    try {
+      const res = await apiService.getMyOrders(userId); // Await ở đây
+      console.log("Đơn hàng:", res);
+      setMyOrder(res);
+
+      // Navigate sang screen mới với data
+      router.push({
+        pathname: "/my-orders",
+        params: { orders: JSON.stringify(res) }, // Truyền data qua params (stringify vì params là string)
+      });
+    } catch (err) {
+      Alert.alert("Lỗi", "Không lấy được đơn hàng");
+      console.error(err);
+    }
+  };
+
+  // const handleMyOrder = (id: number) => {
+  //   const res = apiService.getMyOrders(id);
+  //   console.log(res);
+  //   setMyOrder(res);
+  // };
 
   const renderHeader = () => (
     <View style={styles.header}>
@@ -90,11 +141,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <Text style={styles.editAvatarIcon}>📷</Text>
         </TouchableOpacity>
       </View>
-      
+
       <Text style={styles.userName}>{user.name}</Text>
       <Text style={styles.userEmail}>{user.email}</Text>
       <Text style={styles.userPhone}>{user.phone}</Text>
-      
+
       <Button
         title="Chỉnh sửa hồ sơ"
         onPress={onEditProfile}
@@ -108,23 +159,23 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const renderStats = () => (
     <View style={styles.statsSection}>
       <Text style={styles.sectionTitle}>Thống kê mua sắm</Text>
-      
+
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{user.totalOrders}</Text>
           <Text style={styles.statLabel}>Đơn hàng</Text>
         </View>
-        
+
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{formatPrice(user.totalSpent)}</Text>
           <Text style={styles.statLabel}>Tổng chi tiêu</Text>
         </View>
-        
+
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{user.loyaltyPoints}</Text>
           <Text style={styles.statLabel}>Điểm tích lũy</Text>
         </View>
-        
+
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{user.memberSince}</Text>
           <Text style={styles.statLabel}>Năm tham gia</Text>
@@ -136,15 +187,18 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const renderMenuItems = () => (
     <View style={styles.menuSection}>
       <Text style={styles.sectionTitle}>Tùy chọn</Text>
-      
-      <TouchableOpacity style={styles.menuItem}>
+
+      <TouchableOpacity
+        style={styles.menuItem}
+        onPress={() => handleMyOrder()} // Gọi với userId hoặc 0 nếu null
+      >
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>📋</Text>
           <Text style={styles.menuTitle}>Đơn hàng của tôi</Text>
         </View>
         <Text style={styles.menuArrow}>→</Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>❤️</Text>
@@ -152,7 +206,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
         <Text style={styles.menuArrow}>→</Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>📍</Text>
@@ -160,7 +214,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
         <Text style={styles.menuArrow}>→</Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>💳</Text>
@@ -168,7 +222,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
         <Text style={styles.menuArrow}>→</Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>🎁</Text>
@@ -176,7 +230,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
         <Text style={styles.menuArrow}>→</Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>🔔</Text>
@@ -190,7 +244,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const renderSupportSection = () => (
     <View style={styles.supportSection}>
       <Text style={styles.sectionTitle}>Hỗ trợ</Text>
-      
+
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>❓</Text>
@@ -198,7 +252,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
         <Text style={styles.menuArrow}>→</Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>📞</Text>
@@ -206,7 +260,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
         <Text style={styles.menuArrow}>→</Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>⭐</Text>
@@ -227,7 +281,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         fullWidth
         style={styles.logoutButton}
       />
-      
+
       <Text style={styles.versionText}>Phiên bản 1.0.0</Text>
     </View>
   );
@@ -235,14 +289,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   return (
     <SafeAreaView style={styles.container}>
       {renderHeader()}
-      
+
       <ScrollView showsVerticalScrollIndicator={false}>
         {renderUserInfo()}
         {renderStats()}
         {renderMenuItems()}
         {renderSupportSection()}
         {renderLogoutSection()}
-        
+
         <View style={styles.bottomSpacing} />
       </ScrollView>
     </SafeAreaView>

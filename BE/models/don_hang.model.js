@@ -8,22 +8,7 @@ const don_hang = (don_hang) => {
   this.mapt = don_hang.mapt;
   this.diachi_giao = don_hang.diachi_giao;
 };
-// };
-// don_hang.getById = (id, callback) => {
-//   const sqlString = "SELECT * FROM don_hang WHERE id = ? ";
-//   db.query(sqlString, id, (err, result) => {
-//     if (err) return callback(err);
-//     callback(result);
-//   });
-// };
 
-// don_hang.getAll = (callback) => {
-//   const sqlString = "SELECT * FROM don_hang";
-//   db.query(sqlString, (err, result) => {
-//     if (err) return callback(err);
-//     callback(result);
-//   });
-// };
 
 (don_hang.getAll = (callback) => {
   db.query(
@@ -78,21 +63,7 @@ don_hang.insertOrder = (data, callback) => {
 
     // Đảm bảo tongtien là NUMBER
     const tongtien_val = Number(data.tongtien) || 0;
-
-    // SỬA LỖI JSON:
-    // Thư viện MySQL Node.js sẽ tự động CHUYỂN JSON string thành JSON object
-    // nếu bạn sử dụng placeholder `?` và cột CSDL là kiểu JSON.
-    // Tuy nhiên, đối với Stored Procedure, bạn cần truyền CHUỖI JSON ĐÃ STRINGIFY, 
-    // và Procedure sẽ dùng JSON_TABLE để phân tích cú pháp.
-
-    // Nếu Stored Procedure mong đợi tham số là kiểu JSON, bạn có thể truyền thẳng Object/Array.
-    // Nhưng nếu mong đợi VARCHAR/JSON string (như trong trường hợp JSON_TABLE của bạn):
     const itemsJson = JSON.stringify(data.items);
-    // VÌ LỖI TRƯỚC LÀ INVALID JSON TEXT, TÔI ĐANG GIẢ ĐỊNH BẠN PHẢI TRUYỀN CHUỖI.
-
-
-    // 2. ĐỊNH NGHĨA CÂU LỆNH VÀ THAM SỐ
-    // Sử dụng Template Literals (` `) để tránh lỗi cú pháp \n
     const sql = `
         CALL CreateNewOrder(?, ?, ?, ?, ?, ?, ?, @new_madh);
         SELECT @new_madh AS madh;
@@ -100,13 +71,13 @@ don_hang.insertOrder = (data, callback) => {
 
     // Mảng tham số truyền vào Procedure (theo đúng 7 tham số IN đã sửa)
     const params = [
-        data.makh,         // p_makh (INT)
-        ngaydat_mysql,     // p_ngaydat (DATETIME)
-        tongtien_val,      // p_tongtien (DECIMAL)
-        data.matrangthai,  // p_matrangthai (INT)
-        data.diachi_giao,  // p_diachi_giao (VARCHAR)
-        data.phuongthuc,   // p_phuongthuc (VARCHAR) - cho cột paymentMethod (NOT NULL)
-        itemsJson,         // p_items_json (JSON string)
+      data.makh, // p_makh (INT)
+      ngaydat_mysql, // p_ngaydat (DATETIME)
+      tongtien_val, // p_tongtien (DECIMAL)
+      data.matrangthai, // p_matrangthai (INT)
+      data.diachi_giao, // p_diachi_giao (VARCHAR)
+      data.paymentMethod, // p_phuongthuc (VARCHAR) - cho cột paymentMethod (NOT NULL)
+      itemsJson, // p_items_json (JSON string)
     ];
 
     // 3. Thực thi query
@@ -127,9 +98,17 @@ don_hang.insertOrder = (data, callback) => {
     });
 };
 
+don_hang.getMyOrders = (makh, callback) => {
+  const sqlString = "CALL GetAllOrdersByCustomer(?)";
+  db.query(sqlString, [makh], (err, res) => {
+    if (err) return callback(err);
+    callback(null, res[0]);
+  });
+},
+
 
 don_hang.update = (don_hang, id, callback) => {
-  const sqlString = "UPDATE don_hang SET ? WHERE id = ?";
+  const sqlString = "UPDATE don_hang SET ? WHERE madh = ?";
   db.query(sqlString, [don_hang, id], (err, res) => {
     if (err) return callback(err);
     callback("Cập nhật thành công");
@@ -137,7 +116,7 @@ don_hang.update = (don_hang, id, callback) => {
 };
 
 don_hang.delete = (id, callback) => {
-  db.query("DELETE FROM don_hang WHERE id = ?", id, (err, res) => {
+  db.query("DELETE FROM don_hang WHERE madh = ?", id, (err, res) => {
     if (err) return callback(err);
     callback("Xóa thành công");
   });

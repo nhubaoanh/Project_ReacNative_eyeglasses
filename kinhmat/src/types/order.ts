@@ -13,7 +13,7 @@ interface Order {
   diachi_giao: string;
   mapt?: number;
   items: OrderItem[];
-  phuongthuc: string;
+  paymentMethod: string;
 }
 
 export { Order, OrderItem };

@@ -14,12 +14,10 @@ const authMiddleware = (req, res, next) => {
     return res.status(401).json({ message: "Token không hợp lệ" });
   }
 
-  console.log("Auth header:", req.headers["authorization"]);
-  console.log("Token extracted:", token);
   try {
-    console.log("Auth header:", req.headers["authorization"]);
+    // console.log("Auth header:", req.headers["authorization"]);
     const decoded = jwt.verify(token, JWT_SECRET);
-    console.log("Verify success:", decoded);
+    // console.log("Verify success:", decoded);
     req.user = decoded; // gắn user vào req để dùng sau
     next();
   } catch (err) {

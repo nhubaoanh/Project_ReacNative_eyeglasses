@@ -24,6 +24,24 @@ const khach_hangController = {
   delete: (req, res) => {
     const id = req.params.id;
     khach_hang.delete(id, (result) => res.send(result));
-  }
+  },
+  checkCustom: (req, res) => {
+    const { hoten, sdt, diachi } = req.body;
+
+    khach_hang.checkCustom(hoten, sdt, diachi, (err, result) => {
+      if (err) {
+        console.error(err);
+        return res
+          .status(500)
+          .json({ message: "Lỗi khi kiểm tra khách hàng", error: err });
+      }
+
+      // Trả về dữ liệu khách hàng vừa tìm/thêm
+      return res.json({
+        message: "Lấy thành công",
+        data: result, // chứa thông tin khách hàng (makh, hoten, sdt, diachi)
+      });
+    });
+  },
 };
 export default khach_hangController
