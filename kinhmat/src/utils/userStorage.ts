@@ -35,6 +35,7 @@ export const userStorage = {
     const currentUserId = await AsyncStorage.getItem("currentUserId");
     if (!currentUserId) return null;
     const users = await this.getAllUsers();
+    console.log("users:", users, "currentUserId:", currentUserId);
     return users.find((u) => u.userId === Number(currentUserId)) || null;
   },
 

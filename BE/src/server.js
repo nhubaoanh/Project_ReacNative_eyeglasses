@@ -2,6 +2,8 @@ import express from "express";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
+import { Server} from "socket.io";
+
 import sanphamRoutes from "../routes/san_pham.routes.js";
 import khachhangRoutes from "../routes/khach_hang.routes.js";
 import nhacungcapRoutes from "../routes/nha_cung_cap.routes.js";
@@ -16,17 +18,44 @@ import khuyenmaiRoutes from "../routes/khuyen_mai.routes.js";
 import loaisanphamRoutes from "../routes/loai_san_pham.routes.js";
 import vaitroRoutes from "../routes/vai_tro_nv.routes.js";
 import trangthaidonhangRoutes from "../routes/trang_thai_don_hang.routes.js";
+import http from "http";
 const app = express();
-
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 const port = process.env.PORT || 7890;
 
-// serve static uploads
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-app.use("/uploads", express.static(join(__dirname, "..", "uploads")));
+const server =http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  },
+})
+
+io.on("connection", (socket) => {
+  console.log(`User connected: ${socket.id}`);
+  
+  socket.on("join_room", (roomId) => {
+    socket.join(roomId);
+    console.log(`${socket.id} joined room: ${roomId}`);
+  });
+
+  socket.on("send_message", (data) => {
+    io.to(data.room).emit("receive_message", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`User disconnected: ${socket.id}`);
+  });
+});
+
+// server.listen(3000, () => console.log("Chat server running on port http://localhost:3000"));
+// // serve static uploads
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = dirname(__filename);
+// app.use("/uploads", express.static(join(__dirname, "..", "uploads")));
 
 // dùng routes
 
@@ -45,6 +74,6 @@ app.use("/api/vaitro", vaitroRoutes);
 app.use("/api/trangthaidonhang", trangthaidonhangRoutes);
 app.use("/api/orders", donhangRoutes);
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server is running on port http://localhost:${port}`);
 });

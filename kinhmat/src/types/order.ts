@@ -2,6 +2,7 @@ interface OrderItem {
   masp: number;
   soluong: number;
   dongia: number; // giữ string vì backend trả string
+  tensp: string;
 }
 
 interface Order {

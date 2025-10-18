@@ -50,4 +50,12 @@ vai_tro_nv.login = (email, callback) => {
   })
 }
 
+vai_tro_nv.loginUser = (email, callback) => {
+  const sqlString = "SELECT * FROM khach_hang WHERE email = ?";
+  db.query(sqlString, [email], (err, result) => {
+    if (err) return callback(err);
+    callback(null,result[0]);
+  })
+}
+
 export default vai_tro_nv;

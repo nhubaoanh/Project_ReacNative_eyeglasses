@@ -12,7 +12,7 @@ this.mahang = khach_hang.mahang;
 this.ngaytao = khach_hang.ngaytao;
 };
 khach_hang.getById = (id, callback) => {
-  const sqlString = "SELECT * FROM khach_hang WHERE id = ? ";
+  const sqlString = "SELECT * FROM khach_hang WHERE makh = ? ";
   db.query(sqlString, id, (err, result) => {
     if (err) return callback(err);
     callback(result);

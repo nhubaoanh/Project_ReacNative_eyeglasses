@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   View,
@@ -16,6 +16,7 @@ import apiService from "@/src/service/apiService";
 import { Sizes } from "@/constants/sizes";
 import { Colors } from "@/constants/colors";
 import { useCart } from "@/src/context/CartContext";
+import { userStorage } from "@/src/utils/userStorage";
 
 
 interface Product {
@@ -41,6 +42,16 @@ export default function CheckoutScreen() {
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
 
+  const [userId, setUserId] = useState<number | null>(null);
+
+  useEffect(() => {
+      userStorage.getCurrentUser().then((user) => {
+      if (user) {
+        setUserId(user.userId);
+      }
+    }); 
+  })
+
   const { clearCart } = useCart(); // <-- lấy clearCart từ context
 
   const formatCurrency = (value: number) =>
@@ -65,11 +76,12 @@ export default function CheckoutScreen() {
       masp: item.product.masp,
       dongia: Number(item.product.gia),
       soluong: item.quantity,
+      tensp: item.product.tensp,
     }));
 
     try {
       const response = await apiService.createOrder({
-        makh: 1,
+        makh: userId!,
         madh: 1,
         ngaydat: ngaydat_mysql,
         diachi_giao: address,

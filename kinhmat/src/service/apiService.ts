@@ -1,6 +1,6 @@
 
 import Customer from "../types/customer";
-import { Order, OrderItem } from "../types/order";
+import { Order } from "../types/order";
 import Product from "../types/product";
 import { Supplier } from "../types/supplier";
 
@@ -79,15 +79,14 @@ class ApiService {
     return this.makeRequest("/health");
   }
 
-
-  async login(email: string, matkhau: string): Promise<ApiResponse<any>> {
+  async login(email: string, password: string): Promise<ApiResponse<any>> {
     try {
-      const response = await fetch(`${this.baseURL}/vaitro/login`, {
+      const response = await fetch(`${this.baseURL}/vaitro/loginUser`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, matkhau }),
+        body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
@@ -131,8 +130,6 @@ class ApiService {
   ): Promise<ApiResponse<Product[]>> {
     return this.makeRequest<Product[]>(`/sanpham/category/${categoryId}`);
   }
-
-  // ===== DANH MỤC (CATEGORIES) =====
 
   // ===== KHÁCH HÀNG (CUSTOMERS) =====
   async getAllCustomers(): Promise<ApiResponse<Customer[]>> {
@@ -194,10 +191,17 @@ class ApiService {
     });
   }
 
-  async getMyOrders(makh: number): Promise<Order[]>{
-    return this.makeRequest<Order[]>(`/orders/my-orders/${makh}`, {
+  async getMyOrders(makh: number): Promise<ApiResponse<Order[]>> {
+    const res = await this.makeRequest<any>(`/orders/my-orders/${makh}`, {
       method: "POST",
-    }).then((res) => res.data ?? []);
+    });
+
+    // ✅ bóc mảng từ lớp trong ra ngoài
+    return {
+      success: res.success,
+      data: res.data?.data ?? [],
+      // message: res.data?.message ?? "Không có thông báo",
+    };
   }
 
   // ===== NHÀ CUNG CẤP (SUPPLIERS) =====

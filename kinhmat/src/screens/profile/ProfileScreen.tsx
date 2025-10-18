@@ -1,20 +1,22 @@
 import { Colors } from "@/constants/colors";
 import { Sizes } from "@/constants/sizes";
-import React, { useState } from 'react';
-import {
-    Alert,
-    Image,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-import { Button } from '../../components/ui/Button';
-import { userStorage } from "@/src/utils/userStorage";
+import apiService, { ApiResponse, Order } from "@/src/service/apiService";
+import customerService from "@/src/service/custom.service";
+import Customer from "@/src/types/customer";
+import { userStorage, UserStorageItem } from "@/src/utils/userStorage";
 import { useRouter } from "expo-router";
-import apiService from "@/src/service/apiService";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { Button } from "../../components/ui/Button";
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -31,26 +33,83 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onHelp,
   onLogout,
 }) => {
-  const [myOrder, setMyOrder] = useState<any>([]);
-
+  const [user, setUser] = useState<UserStorageItem | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
+  const [info, setInfo] = useState<Customer | null>(null);
   const router = useRouter();
-  // Mock user data
-  const [user] = useState({
-    name: "Nguyễn Văn A",
-    email: "nguyenvana@email.com",
-    phone: "0123456789",
-    avatar: "https://via.placeholder.com/100x100/007AFF/FFFFFF?text=User",
-    memberSince: "2023",
-    totalOrders: 15,
-    totalSpent: 150000000,
-    loyaltyPoints: 2500,
-  });
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
     }).format(price);
+  };
+
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalSpent: 0,
+    points: 0,
+  });
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  useEffect(() => {
+    if (userId) {
+      fetchDataKhachhang(userId);
+      fetchStats();
+    }
+  }, [userId]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const currentUser = await userStorage.getCurrentUser();
+      if (currentUser && currentUser.userId) {
+        setUserId(currentUser.userId);
+        setUser(currentUser);
+      } else {
+        Alert.alert("Lỗi", "Không tìm thấy thông tin người dùng");
+      }
+    } catch (err) {
+      console.error("Lỗi lấy profile:", err);
+      Alert.alert("Lỗi", "Không thể lấy thông tin hồ sơ");
+    }
+  };
+
+  const fetchDataKhachhang = async (makh: number) => {
+    try {
+      const response = await customerService.getCustomerById(makh);
+      if (response.success && response.data) {
+        setInfo(response.data);
+      }
+    } catch (error) {
+      console.error("Lỗi lấy dữ liệu khách hàng:", error);
+      Alert.alert("Lỗi", "Không thể lấy thông tin khách hàng");
+    }
+  };
+
+  const fetchStats = async () => {
+    if (!userId) return;
+
+    try {
+      const res: ApiResponse<Order[]> = await apiService.getMyOrders(userId);
+      if (res.success && Array.isArray(res.data)) {
+        const orders = res.data;
+        const totalOrders = orders.length;
+        const totalSpent = orders.reduce(
+          (sum, order) => sum + Number(order.tongtien || 0),
+          0
+        );
+        const points = info?.diemtl || 0;
+        setStats({ totalOrders, totalSpent, points });
+      } else {
+        throw new Error(res.error || "Dữ liệu đơn hàng không hợp lệ");
+      }
+    } catch (error) {
+      console.error("Lỗi fetch stats:", error);
+      Alert.alert("Lỗi", "Không thể lấy thống kê");
+    }
   };
 
   const handleLogout = async () => {
@@ -60,66 +119,42 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         text: "Đăng xuất",
         style: "destructive",
         onPress: async () => {
-          const currentUser = await userStorage.getCurrentUser();
-          if (currentUser) {
-            await userStorage.logout();
-            console.log("Đăng xuất thanh cong");
-          }
-          router.replace("/login");
+          await userStorage.logout();
+          console.log("Đăng xuất thành công");
+          router.push("/(drawers)/login");
         },
       },
     ]);
   };
 
-  // // Trong component
-  const [userId, setUserId] = useState<number | null>(null); // Thêm state cho user ID
-
-  // // Trong fetchUserProfile (từ phản hồi trước, nếu bạn đã thêm)
-  // const fetchUserProfile = async () => {
-  //   try {
-  //     // setLoading(true);
-  //     const currentUser = await userStorage.getCurrentUser(); // Giả sử trả { id, name, ... }
-  //     if (currentUser && currentUser.userId) {
-  //       setUserId(currentUser.userId);
-  //       // // Gọi API profile nếu cần
-  //       // const profileRes = await apiService.get(currentUser.id); // Giả sử có method này
-  //       // setUser(profileRes);
-  //     }
-  //   } catch (err) {
-  //     // setError("Lỗi lấy profile");
-  //     console.error(err);
-  //   // } finally {
-  //   //   // setLoading(false);
-  //   // }
-  // };
-
-  // Sửa handleMyOrder
-  const handleMyOrder = async () => {
+  const handleMyOrder = () => {
     if (!userId) {
-      Alert.alert("Lỗi", "Chưa có thông tin user");
+      Alert.alert("Lỗi", "Chưa có thông tin người dùng");
       return;
     }
-    try {
-      const res = await apiService.getMyOrders(userId); // Await ở đây
-      console.log("Đơn hàng:", res);
-      setMyOrder(res);
 
-      // Navigate sang screen mới với data
-      router.push({
-        pathname: "/my-orders",
-        params: { orders: JSON.stringify(res) }, // Truyền data qua params (stringify vì params là string)
-      });
-    } catch (err) {
-      Alert.alert("Lỗi", "Không lấy được đơn hàng");
-      console.error(err);
-    }
+    router.push({
+      pathname: "/my-orders",
+      params: { userId: userId.toString() },
+    });
   };
 
-  // const handleMyOrder = (id: number) => {
-  //   const res = apiService.getMyOrders(id);
-  //   console.log(res);
-  //   setMyOrder(res);
-  // };
+  const handleEditProfile = async (update: Customer) => {
+    try {
+      const res = await customerService.updateCustomer(userId!, update);
+      if (res.success && res.data) {
+        Alert.alert("Thành công", "Cập nhật thông tin thành công!");
+        setInfo(res.data);
+        onEditProfile();
+      } else {
+        Alert.alert("Lỗi", res.error || "Cập nhật thông tin thất bại!");
+        console.error("API lỗi:", res);
+      }
+    } catch (error) {
+      console.error("Lỗi cập nhật thông tin khách hàng:", error);
+      Alert.alert("Lỗi", "Không thể cập nhật thông tin");
+    }
+  };
 
   const renderHeader = () => (
     <View style={styles.header}>
@@ -136,19 +171,28 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const renderUserInfo = () => (
     <View style={styles.userInfoSection}>
       <View style={styles.avatarContainer}>
-        <Image source={{ uri: user.avatar }} style={styles.avatar} />
+        <Image
+          // source={{
+          //   uri:
+          //     info?.avatar ||
+          //     "https://via.placeholder.com/100x100/007AFF/FFFFFF?text=User",
+          // }}
+          style={styles.avatar}
+        />
         <TouchableOpacity style={styles.editAvatarButton}>
           <Text style={styles.editAvatarIcon}>📷</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.userName}>{user.name}</Text>
-      <Text style={styles.userEmail}>{user.email}</Text>
-      <Text style={styles.userPhone}>{user.phone}</Text>
+      <Text style={styles.userName}>{info?.hoten || "Chưa có tên"}</Text>
+      <Text style={styles.userEmail}>{info?.email || "Chưa có email"}</Text>
+      <Text style={styles.userPhone}>
+        {info?.sdt || "Chưa có số điện thoại"}
+      </Text>
 
       <Button
         title="Chỉnh sửa hồ sơ"
-        onPress={onEditProfile}
+        onPress={() => handleEditProfile(info!)}
         variant="outline"
         size="medium"
         style={styles.editProfileButton}
@@ -159,26 +203,18 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const renderStats = () => (
     <View style={styles.statsSection}>
       <Text style={styles.sectionTitle}>Thống kê mua sắm</Text>
-
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{user.totalOrders}</Text>
+          <Text style={styles.statNumber}>{stats.totalOrders}</Text>
           <Text style={styles.statLabel}>Đơn hàng</Text>
         </View>
-
         <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{formatPrice(user.totalSpent)}</Text>
+          <Text style={styles.statNumber}>{formatPrice(stats.totalSpent)}</Text>
           <Text style={styles.statLabel}>Tổng chi tiêu</Text>
         </View>
-
         <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{user.loyaltyPoints}</Text>
+          <Text style={styles.statNumber}>{stats.points}</Text>
           <Text style={styles.statLabel}>Điểm tích lũy</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{user.memberSince}</Text>
-          <Text style={styles.statLabel}>Năm tham gia</Text>
         </View>
       </View>
     </View>
@@ -187,18 +223,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const renderMenuItems = () => (
     <View style={styles.menuSection}>
       <Text style={styles.sectionTitle}>Tùy chọn</Text>
-
-      <TouchableOpacity
-        style={styles.menuItem}
-        onPress={() => handleMyOrder()} // Gọi với userId hoặc 0 nếu null
-      >
+      <TouchableOpacity style={styles.menuItem} onPress={handleMyOrder}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>📋</Text>
           <Text style={styles.menuTitle}>Đơn hàng của tôi</Text>
         </View>
         <Text style={styles.menuArrow}>→</Text>
       </TouchableOpacity>
-
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>❤️</Text>
@@ -206,7 +237,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
         <Text style={styles.menuArrow}>→</Text>
       </TouchableOpacity>
-
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>📍</Text>
@@ -214,7 +244,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
         <Text style={styles.menuArrow}>→</Text>
       </TouchableOpacity>
-
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>💳</Text>
@@ -222,7 +251,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
         <Text style={styles.menuArrow}>→</Text>
       </TouchableOpacity>
-
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>🎁</Text>
@@ -230,7 +258,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
         <Text style={styles.menuArrow}>→</Text>
       </TouchableOpacity>
-
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>🔔</Text>
@@ -244,7 +271,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const renderSupportSection = () => (
     <View style={styles.supportSection}>
       <Text style={styles.sectionTitle}>Hỗ trợ</Text>
-
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>❓</Text>
@@ -252,15 +278,32 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
         <Text style={styles.menuArrow}>→</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.menuItem}
+        onPress={async () => {
+          console.log("👉 Button Liên hệ hỗ trợ được bấm");
+          console.log("userId:", userId);
 
-      <TouchableOpacity style={styles.menuItem}>
+          if (!userId) {
+            Alert.alert("Lỗi", "Chưa có thông tin người dùng");
+            return;
+          }
+          // Lấy staffId từ API hoặc hard-code tạm thời
+          const staffId = 1; // Thay bằng API call nếu cần
+          router.push({
+            pathname: "/chat/[userId]/[staffId]",
+            params: { userId: userId.toString(), staffId: staffId.toString() },
+          });
+
+
+        }}
+      >
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>📞</Text>
           <Text style={styles.menuTitle}>Liên hệ hỗ trợ</Text>
         </View>
         <Text style={styles.menuArrow}>→</Text>
       </TouchableOpacity>
-
       <TouchableOpacity style={styles.menuItem}>
         <View style={styles.menuItemLeft}>
           <Text style={styles.menuIcon}>⭐</Text>
@@ -281,7 +324,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         fullWidth
         style={styles.logoutButton}
       />
-
       <Text style={styles.versionText}>Phiên bản 1.0.0</Text>
     </View>
   );
@@ -289,14 +331,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   return (
     <SafeAreaView style={styles.container}>
       {renderHeader()}
-
       <ScrollView showsVerticalScrollIndicator={false}>
         {renderUserInfo()}
         {renderStats()}
         {renderMenuItems()}
         {renderSupportSection()}
         {renderLogoutSection()}
-
         <View style={styles.bottomSpacing} />
       </ScrollView>
     </SafeAreaView>
@@ -308,53 +348,44 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: Sizes.screenPadding,
     paddingVertical: Sizes.md,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  
   backButton: {
     padding: Sizes.sm,
   },
-  
   backIcon: {
     fontSize: Sizes.iconLg,
     color: Colors.textPrimary,
   },
-  
   headerTitle: {
     fontSize: Sizes.fontSizeLg,
-    fontWeight: '600',
+    fontWeight: "600",
     color: Colors.textPrimary,
   },
-  
   settingsButton: {
     padding: Sizes.sm,
   },
-  
   settingsIcon: {
     fontSize: Sizes.iconLg,
   },
-  
   userInfoSection: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: Sizes.screenPadding,
     backgroundColor: Colors.surface,
     marginBottom: Sizes.md,
   },
-  
   avatarContainer: {
-    position: 'relative',
+    position: "relative",
     marginBottom: Sizes.md,
   },
-  
   avatar: {
     width: 100,
     height: 100,
@@ -362,150 +393,127 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: Colors.primary,
   },
-  
   editAvatarButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     right: 0,
     backgroundColor: Colors.primary,
     borderRadius: Sizes.radiusRound,
     width: 32,
     height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 2,
     borderColor: Colors.white,
   },
-  
   editAvatarIcon: {
     fontSize: Sizes.fontSizeSm,
   },
-  
   userName: {
     fontSize: Sizes.fontSizeXl,
-    fontWeight: '700',
+    fontWeight: "700",
     color: Colors.textPrimary,
     marginBottom: Sizes.xs,
-    textAlign: 'center',
+    textAlign: "center",
   },
-  
   userEmail: {
     fontSize: Sizes.fontSizeMd,
     color: Colors.textSecondary,
     marginBottom: Sizes.xs,
-    textAlign: 'center',
+    textAlign: "center",
   },
-  
   userPhone: {
     fontSize: Sizes.fontSizeMd,
     color: Colors.textSecondary,
     marginBottom: Sizes.md,
-    textAlign: 'center',
+    textAlign: "center",
   },
-  
   editProfileButton: {
     marginBottom: Sizes.sm,
   },
-  
   statsSection: {
     padding: Sizes.screenPadding,
     backgroundColor: Colors.surface,
     marginBottom: Sizes.md,
   },
-  
   sectionTitle: {
     fontSize: Sizes.fontSizeLg,
-    fontWeight: '600',
+    fontWeight: "600",
     color: Colors.textPrimary,
     marginBottom: Sizes.md,
   },
-  
   statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
-  
   statCard: {
-    width: '48%',
+    width: "48%",
     backgroundColor: Colors.grayLight,
     borderRadius: Sizes.radiusMd,
     padding: Sizes.md,
     marginBottom: Sizes.sm,
-    alignItems: 'center',
+    alignItems: "center",
   },
-  
   statNumber: {
     fontSize: Sizes.fontSizeLg,
-    fontWeight: '700',
+    fontWeight: "700",
     color: Colors.primary,
     marginBottom: Sizes.xs,
   },
-  
   statLabel: {
     fontSize: Sizes.fontSizeSm,
     color: Colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
-  
   menuSection: {
     padding: Sizes.screenPadding,
     backgroundColor: Colors.surface,
     marginBottom: Sizes.md,
   },
-  
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: Sizes.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
-  
   menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
-  
   menuIcon: {
     fontSize: Sizes.iconMd,
     marginRight: Sizes.md,
   },
-  
   menuTitle: {
     fontSize: Sizes.fontSizeMd,
     color: Colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
-  
   menuArrow: {
     fontSize: Sizes.fontSizeLg,
     color: Colors.textSecondary,
   },
-  
   supportSection: {
     padding: Sizes.screenPadding,
     backgroundColor: Colors.surface,
     marginBottom: Sizes.md,
   },
-  
   logoutSection: {
     padding: Sizes.screenPadding,
     backgroundColor: Colors.surface,
     marginBottom: Sizes.md,
   },
-  
   logoutButton: {
     marginBottom: Sizes.md,
   },
-  
   versionText: {
     fontSize: Sizes.fontSizeSm,
     color: Colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
-  
   bottomSpacing: {
     height: Sizes.xxl,
   },

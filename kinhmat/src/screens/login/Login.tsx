@@ -1,9 +1,9 @@
 import { Colors } from "@/constants/colors";
 import { Sizes } from "@/constants/sizes";
 import apiService from "@/src/service/apiService";
+import { userStorage } from "@/src/utils/userStorage";
 import { router } from "expo-router";
 import { useState } from "react";
-import { userStorage } from "@/src/utils/userStorage";
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useUser } from "../../context/UserContext"; // path đúng với project của bạn
 
@@ -55,7 +55,7 @@ const handleLogin = async () => {
     console.log("Login response:", res);
 
     if (res.success) {
-      const userId = res.data.user.id;
+      const userId = res.data.user.makh;
       const token = res.data.token;
       const username = res.data.user.hoten;
 
